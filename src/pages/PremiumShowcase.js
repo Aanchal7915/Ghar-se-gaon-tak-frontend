@@ -356,7 +356,7 @@ const sections = [
   },
   {
     id: "b3",
-    img: "https://images.unsplash.com/photo-1550583724-125581cc255b?auto=format&fit=crop&w=1200&q=80",
+    img: "https://images.unsplash.com/photo-1528750997573-59b89d56f4f7?auto=format&fit=crop&w=1200&q=80",
     title: "Pure Dairy Essentials",
     text: "Wholesome and pure, our dairy products are processed with utmost care. From farm-fresh milk to artisanal cheeses, we ensure every drop is packed with nutrition and safety.",
   },
@@ -391,7 +391,7 @@ const PremiumShowcase = () => {
     <div className="bg-gradient-to-b from-[#f8f8f8] to-[#e8e8e8] text-[#2c3e50] overflow-hidden">
       {/* Hero Section */}
       <motion.section
-        className="relative h-[70vh] sm:h-[80vh] md:h-screen flex flex-col justify-center items-center text-center px-6"
+        className="relative h-[60vh] md:h-screen flex flex-col justify-center items-center text-center px-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1.5 }}
@@ -413,7 +413,7 @@ const PremiumShowcase = () => {
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 1, delay: 0.5 }}
         >
-          Rohtak Grocery Company
+          Gaon Se Ghar Tak
         </motion.h1>
         <motion.p
           className="text-base sm:text-lg md:text-2xl font-light max-w-3xl mx-auto italic text-white relative z-10"
@@ -429,43 +429,12 @@ const PremiumShowcase = () => {
       {sections.map((section, index) => (
         <section
           key={section.id}
-          className={`grid grid-cols-1 md:grid-cols-2 min-h-screen items-center px-6 lg:px-20 py-20 gap-16 ${index % 2 === 0 ? "bg-[#ffffff]" : "bg-[#f0f0f0]"
-            } ${index === sections.length - 1 ? "pb-40" : ""}`}
+          className={`grid grid-cols-1 md:grid-cols-2 min-h-fit items-center px-6 lg:px-20 py-10 md:py-16 gap-8 md:gap-12 ${index % 2 === 0 ? "bg-[#ffffff]" : "bg-[#f0f0f0]"
+            } ${index === sections.length - 1 ? "pb-20 md:pb-28" : ""}`}
         >
-          {/* Text Content */}
+          {/* Image - Forced to top on mobile (order-1) */}
           <motion.div
-            className={`p-6 md:p-12 flex flex-col justify-center text-center md:text-left 
-                       ${index % 2 === 0 ? "md:order-1" : "md:order-2"}`}
-            initial={{ opacity: 0, x: index % 2 === 0 ? -80 : 80 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
-          >
-            <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 leading-tight">
-              {section.title}
-            </h2>
-            <p className="text-base sm:text-lg md:text-xl leading-relaxed mb-8 font-light text-[#576b7e]">
-              {section.text}
-            </p>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.98 }}
-              className={
-                index % 2 === 0 ? "md:self-start" : "md:self-end text-right"
-              }
-            >
-              <Link
-                to="/products"
-                className="inline-block px-8 sm:px-12 py-4 sm:py-5 bg-green-700 text-white rounded-full shadow-lg hover:bg-green-800 transition-colors duration-300 text-base sm:text-lg font-semibold tracking-wide"
-              >
-                Explore Freshness
-              </Link>
-            </motion.div>
-          </motion.div>
-
-          {/* Image */}
-          <motion.div
-            className={`flex justify-center items-center 
+            className={`flex justify-center items-center order-1 
                        ${index % 2 === 0 ? "md:order-2" : "md:order-1"}`}
             initial={{
               opacity: 0,
@@ -477,12 +446,42 @@ const PremiumShowcase = () => {
             transition={{ duration: 1.2, ease: "easeOut" }}
           >
             <motion.img
-              src={section.img}
+              src={`${section.img}&q=90&w=800`}
               alt={section.title}
-              className="w-full h-full object-cover rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-700 hover:scale-105"
+              className="w-full h-auto max-h-[500px] object-cover rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 md:hover:scale-105"
               whileHover={{ scale: 1.05, rotate: -2 }}
               transition={{ duration: 0.5 }}
             />
+          </motion.div>
+
+          {/* Text Content - order-2 on mobile */}
+          <motion.div
+            className={`p-4 md:p-12 flex flex-col justify-center text-center md:text-left order-2
+                       ${index % 2 === 0 ? "md:order-1" : "md:order-2"}`}
+            initial={{ opacity: 0, x: index % 2 === 0 ? -80 : 80 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, amount: 0.4 }}
+            transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
+          >
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold mb-4 leading-tight">
+              {section.title}
+            </h2>
+            <p className="text-base sm:text-lg md:text-xl leading-relaxed mb-6 md:mb-8 font-light text-[#576b7e]">
+              {section.text}
+            </p>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
+              className={`flex flex-col items-center ${index % 2 === 0 ? "md:items-start" : "md:items-end md:text-right"
+                }`}
+            >
+              <Link
+                to="/products"
+                className="inline-block px-8 sm:px-12 py-4 sm:py-5 bg-green-700 text-white rounded-full shadow-lg hover:bg-green-800 transition-colors duration-300 text-sm md:text-lg font-semibold tracking-wide"
+              >
+                Explore Freshness
+              </Link>
+            </motion.div>
           </motion.div>
         </section>
       ))}

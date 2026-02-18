@@ -203,7 +203,7 @@ const CartPage = () => {
                     <div className="lg:col-span-5 mt-8 lg:mt-0">
                         <form onSubmit={handleCheckout} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden sticky top-4">
                             <div className="p-6 bg-yellow-400 text-black">
-                                <h2 className="text-2xl font-bold">Order Summary</h2>
+                                <h2 className="text-2xl font-bold">Shipping Details</h2>
                                 <p className="text-gray-600 text-sm mt-1">Free shipping on all orders</p>
                             </div>
 

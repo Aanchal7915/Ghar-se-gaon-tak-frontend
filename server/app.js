@@ -21,10 +21,10 @@
 // app.use(express.json());
 // app.use(cookieParser());  // ⬅️ enable cookies
 
-// const allowedOrigins = [
 //   "http://localhost:3000",
 //   "https://shoes-ecommerce-sohams-projects-32d50290.vercel.app",
-//   "https://shoes-ecommerce-iota.vercel.app"
+//   "https://shoes-ecommerce-iota.vercel.app",
+//   "https://gaon-se-ghar-tak.vercel.app"
 // ];
 
 // app.use(cors({
@@ -72,7 +72,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const deliveryRoutes = require('./routes/deliveryRoutes');
 const userRoutes = require('./routes/userRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
-const categoryRoutes = require('./routes/categoryRoutes'); 
+const categoryRoutes = require('./routes/categoryRoutes');
 const returnReplaceRoutes = require('./routes/returnReplaceRoutes');
 const wishlistRoutes = require('./routes/wishlistRoutes');
 
@@ -84,8 +84,7 @@ app.use(cookieParser());
 
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://shoes-ecommerce-sohams-projects-32d50290.vercel.app",
-  "https://shoes-ecommerce-iota.vercel.app"
+  "https://gaon-se-ghar-tak.vercel.app"
 ];
 
 app.use(cors({
