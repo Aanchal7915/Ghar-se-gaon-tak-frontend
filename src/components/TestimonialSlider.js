@@ -274,7 +274,7 @@ const testimonials = [
     id: 5,
     name: 'Suresh Yadav',
     review:
-      'The whole wheat bread is soft and fresh. It stays fresh for days. Definitely switching to Rohtak Grocery for my daily bread.',
+      'The whole wheat bread is soft and fresh. It stays fresh for days. Definitely switching to Gaon Se Ghar Tak for my daily bread.',
     rating: 5,
     ratingsCount: 210,
     userImage: person5,

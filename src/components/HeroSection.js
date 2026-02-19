@@ -30,15 +30,19 @@ const groceryData = [
 const HeroSection = () => {
   const navigate = useNavigate();
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        setLoading(true);
         const response = await apiClient.get('/categories');
         // Show first 8 categories like the original design
         setCategories(response.data.slice(0, 8));
       } catch (error) {
         console.error('Failed to fetch categories:', error);
+      } finally {
+        setLoading(false);
       }
     };
     fetchCategories();
@@ -92,49 +96,60 @@ const HeroSection = () => {
 
 
         {/* Dome Cards Container - Updated for better mobile fit */}
-        <div className="grid grid-cols-4 md:grid-cols-8 gap-2 w-full max-w-[1400px] px-0 md:px-4 pb-16">
-          {categories.map((cat, idx) => (
-            <motion.div
-              key={cat._id || idx}
-              initial={{ opacity: 0, scale: 0.9, y: 30 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ delay: 0.05 * idx, duration: 0.5 }}
-              whileHover={{ y: -5 }}
-              className="group flex flex-col items-center cursor-pointer"
-              onClick={() => navigate(`/categories/${cat._id}`)}
-            >
-              <div className="bg-[#b8ead4] rounded-xl overflow-hidden shadow-md relative w-full aspect-[4/5] flex flex-col items-center justify-center border border-yellow-600/10 hover:border-yellow-400/60 transition-all duration-500 group">
-                {/* Intricate Pattern Background */}
-                <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l20 20M10 0l10 10M0 10l10 10' stroke='%231e4636' stroke-width='1' fill='none'/%3E%3C/svg%3E")` }}></div>
+        <div className="grid grid-cols-4 md:grid-cols-8 gap-2 w-full max-w-[1400px] px-0 md:px-4 pb-16 min-h-[120px] md:min-h-[200px] items-center justify-center">
+          {loading ? (
+            <div className="col-span-full flex flex-col items-center justify-center py-10">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-10 h-10 border-4 border-green-600 border-t-transparent rounded-full"
+              />
+              <p className="mt-4 text-green-800 font-bold text-sm animate-pulse">Loading Categories...</p>
+            </div>
+          ) : (
+            categories.map((cat, idx) => (
+              <motion.div
+                key={cat._id || idx}
+                initial={{ opacity: 0, scale: 0.9, y: 30 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ delay: 0.05 * idx, duration: 0.5 }}
+                whileHover={{ y: -5 }}
+                className="group flex flex-col items-center cursor-pointer"
+                onClick={() => navigate(`/categories/${cat._id}`)}
+              >
+                <div className="bg-[#b8ead4] rounded-xl overflow-hidden shadow-md relative w-full aspect-[4/5] flex flex-col items-center justify-center border border-yellow-600/10 hover:border-yellow-400/60 transition-all duration-500 group">
+                  {/* Intricate Pattern Background */}
+                  <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l20 20M10 0l10 10M0 10l10 10' stroke='%231e4636' stroke-width='1' fill='none'/%3E%3C/svg%3E")` }}></div>
 
-                {/* Refined Archway Design */}
-                <div className="absolute top-0 left-0 w-full h-[45%] bg-gradient-to-b from-white/40 to-transparent clip-path-dome"></div>
+                  {/* Refined Archway Design */}
+                  <div className="absolute top-0 left-0 w-full h-[45%] bg-gradient-to-b from-white/40 to-transparent clip-path-dome"></div>
 
-                {/* Decorative Elements */}
-                <div className="absolute top-1 left-2 text-[6px] md:text-[8px] text-yellow-700/40">✦</div>
-                <div className="absolute top-1 right-2 text-[6px] md:text-[8px] text-yellow-700/40">✦</div>
+                  {/* Decorative Elements */}
+                  <div className="absolute top-1 left-2 text-[6px] md:text-[8px] text-yellow-700/40">✦</div>
+                  <div className="absolute top-1 right-2 text-[6px] md:text-[8px] text-yellow-700/40">✦</div>
 
-                {/* Content Container */}
-                <div className="relative z-10 flex flex-col items-center w-full h-full pt-4 md:pt-8">
-                  {/* Square Image with Glow - Optimized for mobile */}
-                  <div className="w-12 h-12 md:w-28 md:h-28 lg:w-34 lg:h-34 rounded-lg overflow-hidden border border-white/80 shadow-[0_0_10px_rgba(255,255,255,0.4)] bg-white/30 p-0.5 transform transition-all duration-500 group-hover:scale-105 group-hover:rotate-1">
-                    <img
-                      src={cat.image}
-                      alt={cat.name}
-                      className="w-full h-full object-cover rounded-md"
-                    />
-                  </div>
+                  {/* Content Container */}
+                  <div className="relative z-10 flex flex-col items-center w-full h-full pt-4 md:pt-8">
+                    {/* Square Image with Glow - Optimized for mobile */}
+                    <div className="w-12 h-12 md:w-28 md:h-28 lg:w-34 lg:h-34 rounded-lg overflow-hidden border border-white/80 shadow-[0_0_10px_rgba(255,255,255,0.4)] bg-white/30 p-0.5 transform transition-all duration-500 group-hover:scale-105 group-hover:rotate-1">
+                      <img
+                        src={cat.image}
+                        alt={cat.name}
+                        className="w-full h-full object-cover rounded-md"
+                      />
+                    </div>
 
-                  {/* Glassmorphism Title Bar */}
-                  <div className="mt-auto w-full bg-white/20 backdrop-blur-md border-t border-white/30 py-1.5 md:py-2 group-hover:bg-white/40 transition-colors">
-                    <h3 className="text-[#1e4636] text-[7px] sm:text-[9px] md:text-[11px] font-black text-center px-0.5 uppercase tracking-widest leading-tight">
-                      {cat.name}
-                    </h3>
+                    {/* Glassmorphism Title Bar */}
+                    <div className="mt-auto w-full bg-white/20 backdrop-blur-md border-t border-white/30 py-1.5 md:py-2 group-hover:bg-white/40 transition-colors">
+                      <h3 className="text-[#1e4636] text-[7px] sm:text-[9px] md:text-[11px] font-black text-center px-0.5 uppercase tracking-widest leading-tight">
+                        {cat.name}
+                      </h3>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))
+          )}
         </div>
       </div>
 
