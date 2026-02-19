@@ -126,7 +126,7 @@ const Header = () => {
           className="flex items-center transition-all duration-300"
           aria-label="Rohtak Grocery Co. Home"
         >
-          <img src="/final-logo.png" alt="Rohtak Grocery Co." className="h-[30px] w-[120px] md:h-[50px] md:w-[200px] object-contain mix-blend-multiply" />
+          <img src="/final-logo.png" alt="Rohtak Grocery Co." className="h-[45px] w-[160px] md:h-[50px] md:w-[200px] object-contain mix-blend-multiply" />
         </Link>
 
         {/* Desktop Nav */}

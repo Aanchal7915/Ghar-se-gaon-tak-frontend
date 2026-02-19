@@ -332,7 +332,7 @@ const TestimonialSlider = () => {
   return (
     <section id='testimonials' className="relative py-1 md:py-4 overflow-hidden bg-gradient-to-br from-[#fffdf7] to-[#fefaf3]">
       <div className="container mx-auto px-4 md:px-8 relative z-10">
-        <div className="relative w-full max-w-5xl mx-auto flex items-center justify-center min-h-[360px] md:min-h-[420px]">
+        <div className="relative w-full max-w-5xl mx-auto flex items-center justify-center min-h-[500px] md:min-h-[420px]">
           <AnimatePresence initial={false} custom={direction}>
             <motion.div
               key={currentSlide}

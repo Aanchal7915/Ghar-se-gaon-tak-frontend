@@ -139,7 +139,7 @@ const VisitInStoreSection = () => {
                            transition-all duration-300 transform hover:-translate-y-1 group
                            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               >
-                <span className="relative z-10">Find Nearest Outlets</span>
+                <span className="relative z-10">Gaon Se Ghar Tak</span>
                 <span className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
               </a>
             </div>
