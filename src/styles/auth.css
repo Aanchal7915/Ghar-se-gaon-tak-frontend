@@ -233,19 +233,20 @@
   font-size: 14px;
   text-align: center;
   margin: 20px 0 10px;
+  color: #ffffff;
 }
 
 .auth-page .regi-link a {
   text-decoration: none;
   font-weight: 600;
   cursor: pointer;
-  color: var(--accent-3);
-  text-shadow: 0 0 4px rgba(255, 177, 0, 0.3);
+  color: #ffffff;
+  text-shadow: 0 0 4px rgba(255, 255, 255, 0.2);
 }
 
 .auth-page .regi-link a:hover {
   text-decoration: underline;
-  color: #ffffff;
+  color: var(--accent-3);
 }
 
 /* ===== Info Content (Desktop) ===== */
@@ -293,14 +294,17 @@
 .auth-page .info-content h2 {
   text-transform: uppercase;
   font-size: 36px;
+  font-weight: 800;
   line-height: 1.3;
-  color: var(--text-light);
-  text-shadow: 0 0 10px rgba(255, 212, 59, 0.4);
+  color: #ffffff;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .auth-page .info-content p {
   font-size: 16px;
-  color: var(--text-dim);
+  font-weight: 500;
+  color: #ffffff;
+  opacity: 0.95;
 }
 
 /* ===== Curved Shapes (Desktop) ===== */
