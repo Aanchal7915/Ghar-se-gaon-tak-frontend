@@ -29,6 +29,7 @@ exports.assignOrderToDelivery = async (req, res) => {
 
     // Assign fresh delivery
     order.assignedTo = deliveryPersonId;
+    order.status = 'out for delivery';
     await order.save();
 
     const newDelivery = new Delivery({
@@ -59,22 +60,22 @@ exports.assignOrderToDelivery = async (req, res) => {
 // @desc    DeliDvery person updates their live location
 // @route   POST /api/delivery/location
 exports.updateLiveLocation = async (req, res) => {
-    const { latitude, longitude } = req.body;
-    const deliveryPersonId = req.user._id;
-    try {
-        const delivery = await Delivery.findOneAndUpdate(
-            { deliveryPerson: deliveryPersonId, status: { $ne: 'delivered' } },
-            { 'liveLocation.latitude': latitude, 'liveLocation.longitude': longitude },
-            { new: true }
-        );
-        if (!delivery) {
-            return res.status(404).json({ message: 'No active delivery found' });
-        }
-        res.status(200).json({ message: 'Location updated', location: delivery.liveLocation });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server Error' });
+  const { latitude, longitude } = req.body;
+  const deliveryPersonId = req.user._id;
+  try {
+    const delivery = await Delivery.findOneAndUpdate(
+      { deliveryPerson: deliveryPersonId, status: { $ne: 'delivered' } },
+      { 'liveLocation.latitude': latitude, 'liveLocation.longitude': longitude },
+      { new: true }
+    );
+    if (!delivery) {
+      return res.status(404).json({ message: 'No active delivery found' });
     }
+    res.status(200).json({ message: 'Location updated', location: delivery.liveLocation });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server Error' });
+  }
 };
 
 exports.updateDeliveryStatus = async (req, res) => {
@@ -131,32 +132,32 @@ exports.updateDeliveryStatus = async (req, res) => {
 // @route   POST /api/delivery/send-otp
 // @access  Private/Delivery
 exports.sendDeliveryOtp = async (req, res) => {
-    const { orderId } = req.body;
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+  const { orderId } = req.body;
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
-    try {
-        const delivery = await Delivery.findOne({ order: orderId }).populate('deliveryPerson', 'email');
-        if (!delivery) {
-            return res.status(404).json({ message: 'Delivery record not found.' });
-        }
-
-        const order = await Order.findById(orderId).populate('user', 'email');
-        if (!order) {
-            return res.status(404).json({ message: 'Order not found.' });
-        }
-
-        delivery.otp = otp;
-        delivery.otpExpiry = otpExpiry;
-        await delivery.save();
-
-        await otpService.sendOTP(order.user.email, otp);
-
-        res.status(200).json({ message: 'OTP sent to customer\'s email.' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Failed to send OTP.' });
+  try {
+    const delivery = await Delivery.findOne({ order: orderId }).populate('deliveryPerson', 'email');
+    if (!delivery) {
+      return res.status(404).json({ message: 'Delivery record not found.' });
     }
+
+    const order = await Order.findById(orderId).populate('user', 'email');
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found.' });
+    }
+
+    delivery.otp = otp;
+    delivery.otpExpiry = otpExpiry;
+    await delivery.save();
+
+    await otpService.sendOTP(order.user.email, otp);
+
+    res.status(200).json({ message: 'OTP sent to customer\'s email.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Failed to send OTP.' });
+  }
 };
 
 

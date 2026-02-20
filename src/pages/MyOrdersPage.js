@@ -357,7 +357,7 @@ import apiClient from '../services/apiClient';
 
 import moment from 'moment';
 import LoadingSpinner from '../components/LoadingSpinner';
-import { FaBox, FaTruck, FaUndo, FaExchangeAlt, FaTimesCircle, FaCheckCircle, FaSpinner } from 'react-icons/fa';
+import { FaBox, FaTruck, FaUndo, FaExchangeAlt, FaTimesCircle, FaCheckCircle, FaSpinner, FaClock } from 'react-icons/fa';
 
 const MyOrdersPage = () => {
     const [orders, setOrders] = useState([]);
@@ -370,6 +370,7 @@ const MyOrdersPage = () => {
     const [requestType, setRequestType] = useState('return');
     const [requestReason, setRequestReason] = useState('');
     const [requestMessage, setRequestMessage] = useState('');
+    const [selectedItem, setSelectedItem] = useState(null);
 
     const [availableSizes, setAvailableSizes] = useState([]);
     const [selectedSize, setSelectedSize] = useState('');
@@ -401,15 +402,16 @@ const MyOrdersPage = () => {
         fetchMyOrdersAndRequests();
     }, []);
 
-    const handleRequestClick = async (order, type) => {
+    const handleRequestClick = async (order, item, type) => {
         setCurrentOrder(order);
+        setSelectedItem(item);
         setRequestType(type);
         setRequestReason('');
         setSelectedSize('');
 
         if (type === 'replace') {
             try {
-                const productId = order.orderItems[0]?.product?._id;
+                const productId = item.product?._id || item.product;
                 if (!productId) {
                     console.error('Product ID is missing.');
                     return;
@@ -442,14 +444,21 @@ const MyOrdersPage = () => {
                 orderId: currentOrder._id,
                 type: requestType,
                 reason: requestReason,
+                originalItem: {
+                    name: selectedItem.name,
+                    qty: selectedItem.qty,
+                    price: selectedItem.price,
+                    product: selectedItem.product?._id || selectedItem.product,
+                    size: selectedItem.size
+                }
             };
 
             if (requestType === 'replace') {
                 payload.replacedProductInfo = {
-                    name: currentOrder.orderItems[0].name,
-                    qty: currentOrder.orderItems[0].qty,
-                    price: currentOrder.orderItems[0].price,
-                    product: currentOrder.orderItems[0].product._id,
+                    name: selectedItem.name,
+                    qty: selectedItem.qty,
+                    price: selectedItem.price,
+                    product: selectedItem.product?._id || selectedItem.product,
                     size: selectedSize,
                 };
             }
@@ -488,6 +497,8 @@ const MyOrdersPage = () => {
             case 'pending': return 'bg-yellow-100 text-yellow-800';
             case 'delivered': return 'bg-green-100 text-green-800';
             case 'shipped': return 'bg-blue-100 text-blue-800';
+            case 'out for delivery': return 'bg-blue-100 text-blue-800';
+            case 'cancelled': return 'bg-red-100 text-red-800';
             case 'canceled': return 'bg-red-100 text-red-800';
             default: return 'bg-gray-100 text-gray-800';
         }
@@ -495,12 +506,12 @@ const MyOrdersPage = () => {
 
     const getRequestStatusColor = (status) => {
         switch (status) {
-            case 'pending': return 'text-yellow-600';
             case 'approved': return 'text-green-600';
             case 'rejected': return 'text-red-600';
             case 'out for pickup': return 'text-purple-600';
+            case 'received': return 'text-green-600';
             case 'completed': return 'text-green-600';
-            default: return 'text-gray-600';
+            default: return 'text-gray-400';
         }
     };
 
@@ -537,7 +548,7 @@ const MyOrdersPage = () => {
                             <div key={order._id} className="bg-white rounded-xl shadow-lg p-6 md:p-8 hover:shadow-xl transition-shadow duration-300">
                                 <div className="flex flex-col md:flex-row md:justify-between md:items-center border-b pb-4 mb-4">
                                     <div className="mb-4 md:mb-0">
-                                        <h2 className="text-lg md:text-2xl font-bold text-gray-800 break-words md:break-normal">
+                                        <h2 className="text-lg md:text-2xl font-bold text-gray-800 break-words md:break-normal font-sans">
                                             Order #{order.orderNumber}
                                         </h2>
                                         <p className="text-sm text-gray-500 mt-1">
@@ -570,41 +581,96 @@ const MyOrdersPage = () => {
 
                                 {/* Order Items */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 border-t pt-6">
-                                    {order.orderItems.map((item) => (
-                                        <div key={item._id} className="flex items-center space-x-4 bg-gray-50 p-4 rounded-md">
-                                            <img
-                                                src={item.product?.images?.[0]}
-                                                alt={item.name}
-                                                className="w-20 h-20 object-cover rounded-lg shadow-sm"
-                                            />
-                                            <div className="flex-1">
-                                                <p className="font-semibold text-gray-800">{item.name}</p>
-                                                <p className="text-sm text-gray-500">Qty: {item.qty} | Pack: {item.size}</p>
-                                                <p className="text-lg font-bold text-indigo-500">₹{item.price}</p>
+                                    {order.orderItems.map((item) => {
+                                        const itemRequest = allRequests.find(
+                                            (req) => String(req.order?._id || req.order) === String(order._id) &&
+                                                String(req.originalItem?.product?._id || req.originalItem?.product) === String(item.product?._id || item.product) &&
+                                                req.originalItem?.size === item.size
+                                        );
+
+                                        const isItemPendingOrInProgress = itemRequest?.status === 'pending' || itemRequest?.status === 'out for pickup';
+                                        const isItemRejected = itemRequest?.status === 'rejected';
+                                        const isItemCompleted = itemRequest?.status === 'received' || itemRequest?.status === 'completed';
+                                        const isItemActionable = order.isDelivered && !isItemPendingOrInProgress && !isItemCompleted && !isItemRejected;
+
+                                        return (
+                                            <div key={item._id} className="flex flex-col bg-gray-50 p-4 rounded-md">
+                                                <div className="flex items-center space-x-4">
+                                                    <img
+                                                        src={item.product?.images?.[0]}
+                                                        alt={item.name}
+                                                        className="w-20 h-20 object-cover rounded-lg shadow-sm"
+                                                    />
+                                                    <div className="flex-1">
+                                                        <p className="font-semibold text-gray-800">{item.name}</p>
+                                                        <p className="text-sm text-gray-500">Qty: {item.qty} | Pack: {item.size}</p>
+                                                        <p className="text-lg font-bold text-indigo-500">₹{item.price}</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Item Specific Request Status */}
+                                                {/* Status hidden on frontend as per admin requirement */}
+                                                {/* {itemRequest && (
+                                                    <div className="mt-3 p-2 rounded bg-white shadow-sm border border-gray-100 flex items-center space-x-2">
+                                                        <span className={`text-sm ${getRequestStatusColor(itemRequest.status)}`}>
+                                                            {itemRequest.status === 'pending' && <FaClock />}
+                                                            {itemRequest.status === 'approved' && <FaCheckCircle />}
+                                                            {itemRequest.status === 'out for pickup' && <FaTruck />}
+                                                            {isItemRejected && <FaTimesCircle />}
+                                                            {isItemCompleted && <FaCheckCircle />}
+                                                            {!itemRequest.status && <FaBox />}
+                                                        </span>
+                                                        <p className={`text-xs font-bold capitalize ${getRequestStatusColor(itemRequest.status)}`}>
+                                                            {itemRequest.status === 'pending' ? 'Request Under Review' : `${itemRequest.type}: ${itemRequest.status}`}
+                                                        </p>
+                                                        {isItemPendingOrInProgress && (
+                                                            <button
+                                                                onClick={() => handleCancelRequest(itemRequest._id)}
+                                                                className="ml-auto text-xs bg-gray-200 hover:bg-gray-300 px-2 py-0.5 rounded transition-colors"
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                )} */}
+
+                                                {/* Item Specific Action Buttons */}
+                                                {isItemActionable && (
+                                                    <div className="mt-4 flex space-x-2">
+                                                        <button
+                                                            onClick={() => handleRequestClick(order, item, 'replace')}
+                                                            className="flex items-center justify-center py-1.5 px-4 rounded bg-purple-600 text-white text-xs font-bold hover:bg-purple-700 transition-colors"
+                                                        >
+                                                            <FaExchangeAlt className="mr-1" /> Replace
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleRequestClick(order, item, 'return')}
+                                                            className="flex items-center justify-center py-1.5 px-4 rounded bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors"
+                                                        >
+                                                            <FaUndo className="mr-1" /> Return
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
 
-                                {/* Request Status */}
-                                {request && (
+                                {/* Order Level Status (Only show if no individual item requests or general order issues) */}
+                                {/* Order level request status hidden as per requirement */}
+                                {/* {request && !allRequests.some(r => r.order === order._id && r.originalItem) && (
                                     <div className="mt-6 p-4 rounded-md bg-gray-100 flex flex-col md:flex-row md:items-center justify-between">
                                         <div className="flex items-center space-x-3 mb-4 md:mb-0">
                                             <span className={`text-xl ${getRequestStatusColor(request.status)}`}>
-                                                {request.status === 'pending' && <FaSpinner className="animate-spin" />}
+                                                {request.status === 'pending' && <FaClock />}
                                                 {request.status === 'out for pickup' && <FaTruck />}
                                                 {isRejected && <FaTimesCircle />}
                                                 {isCompleted && <FaCheckCircle />}
                                                 {!request.status && <FaBox />}
                                             </span>
                                             <p className={`font-bold capitalize ${getRequestStatusColor(request.status)}`}>
-                                                {request.type} request status: {request.status}
+                                                Order request status: {request.status}
                                             </p>
-                                            {isRejected && request.rejectionReason && (
-                                                <span className="text-sm text-gray-500 italic ml-2">
-                                                    Reason: {request.rejectionReason}
-                                                </span>
-                                            )}
                                         </div>
                                         {isPendingOrInProgress && (
                                             <button
@@ -615,25 +681,9 @@ const MyOrdersPage = () => {
                                             </button>
                                         )}
                                     </div>
-                                )}
+                                )} */}
 
-                                {/* Action Buttons */}
-                                {isActionable && (
-                                    <div className="mt-6 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                                        <button
-                                            onClick={() => handleRequestClick(order, 'replace')}
-                                            className={`flex items-center justify-center px-6 py-2 rounded-md font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-colors transform hover:scale-105`}
-                                        >
-                                            <FaExchangeAlt className="inline-block mr-2" /> Replace Order
-                                        </button>
-                                        <button
-                                            onClick={() => handleRequestClick(order, 'return')}
-                                            className={`flex items-center justify-center px-6 py-2 rounded-md font-semibold text-white bg-red-600 hover:bg-red-700 transition-colors transform hover:scale-105`}
-                                        >
-                                            <FaUndo className="inline-block mr-2" /> Return Order
-                                        </button>
-                                    </div>
-                                )}
+                                {/* General buttons removed since we now have item-level buttons */}
                             </div>
                         );
                     })}

@@ -132,16 +132,16 @@ const AdminDashboard = () => {
             <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
             <div className="border-b border-gray-200 mb-6">
                 <nav className="-mb-px flex space-x-8 overflow-x-auto">
-                    <button onClick={() => setActiveTab('unassignedOrders')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'unassignedOrders' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Unassigned</button>
-                    <button onClick={() => setActiveTab('assignedOrders')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'assignedOrders' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Assigned</button>
+                    <button onClick={() => setActiveTab('unassignedOrders')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'unassignedOrders' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Unassigned Deliveries</button>
+                    <button onClick={() => setActiveTab('assignedOrders')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'assignedOrders' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Assigned Deliveries</button>
                     <button onClick={() => setActiveTab('products')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'products' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Products</button>
                     <button onClick={() => setActiveTab('users')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'users' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Users</button>
                     <button onClick={() => setActiveTab('createUser')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'createUser' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Create User</button>
                     <button onClick={() => setActiveTab('analytics')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'analytics' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Analytics</button>
                     <button onClick={() => setActiveTab('completedOrders')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'completedOrders' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Completed</button>
                     <button onClick={() => setActiveTab('cancelledOrders')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'cancelledOrders' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Cancelled</button>
-                    <button onClick={() => setActiveTab('pendingReturns')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'pendingReturns' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Pending Returns</button>
-                    <button onClick={() => setActiveTab('assignedPickups')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'assignedPickups' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Assigned Pickups</button>
+                    <button onClick={() => setActiveTab('pendingReturns')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'pendingReturns' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Return Requests</button>
+                    <button onClick={() => setActiveTab('assignedPickups')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'assignedPickups' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Pickup Tasks</button>
                     <button onClick={() => setActiveTab('completedReturns')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'completedReturns' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Completed Returns</button>
                     <button onClick={() => setActiveTab('cancelledReturns')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'cancelledReturns' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Cancelled Returns</button>
                 </nav>
@@ -150,7 +150,7 @@ const AdminDashboard = () => {
             {activeTab === 'unassignedOrders' && (
                 <div>
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-semibold">Unassigned Orders</h2>
+                        <h2 className="text-2xl font-semibold">Unassigned Deliveries</h2>
                         <input
                             type="text"
                             placeholder="Search orders..."
@@ -201,7 +201,7 @@ const AdminDashboard = () => {
             {activeTab === 'assignedOrders' && (
                 <div>
                     <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-semibold">Assigned Orders</h2>
+                        <h2 className="text-2xl font-semibold">Assigned Deliveries</h2>
                         <input
                             type="text"
                             placeholder="Search orders..."
@@ -250,8 +250,8 @@ const AdminDashboard = () => {
                 </div>
             )}
 
-            {activeTab === 'pendingReturns' && <ReturnReplaceRequests deliveryPartners={deliveryPartners} />}
-            {activeTab === 'assignedPickups' && <AssignedPickups />}
+            {activeTab === 'pendingReturns' && <ReturnReplaceRequests deliveryPartners={deliveryPartners} setActiveTab={setActiveTab} />}
+            {activeTab === 'assignedPickups' && <AssignedPickups setActiveTab={setActiveTab} />}
             {activeTab === 'completedReturns' && <CompletedCancelledRequests type="completed" />}
             {activeTab === 'cancelledReturns' && <CompletedCancelledRequests type="cancelled" />}
             {activeTab === 'products' && <ProductManagement />}

@@ -89,7 +89,7 @@ const CartPage = () => {
                 key: razorpayOrder.key_id,
                 amount: razorpayOrder.amount,
                 currency: razorpayOrder.currency,
-                name: "Rohtak Grocery",
+                name: "Gaon se ghar tak",
                 description: `Order #${createdOrder.orderNumber}`,
                 order_id: razorpayOrder.id,
                 handler: async function (response) {
@@ -103,7 +103,7 @@ const CartPage = () => {
                     navigate('/myorders');
                 },
                 prefill: {
-                    email: createdOrder.user.email,
+                    email: user.email,
                 },
                 theme: {
                     color: "#16a34a", // Green color for Razorpay modal matching the button
@@ -113,8 +113,9 @@ const CartPage = () => {
             rzp1.open();
 
         } catch (error) {
-            console.error('Checkout failed:', error.response?.data?.message || error.message);
-            alert('Checkout failed. Please try again.');
+            const errorMessage = error.response?.data?.message || error.message;
+            console.error('Checkout failed:', errorMessage);
+            alert(`Checkout failed: ${errorMessage}`);
         }
     };
 

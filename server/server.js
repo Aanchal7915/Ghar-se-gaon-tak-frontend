@@ -61,11 +61,11 @@
 // });
 
 // server.js
+require('dotenv').config();
 const { app, allowedOrigins } = require('./app');
 const mongoose = require('mongoose');
 const http = require('http');
 const { Server } = require('socket.io');
-require('dotenv').config();
 const Delivery = require('./models/Delivery');
 
 const PORT = process.env.PORT || 5000;

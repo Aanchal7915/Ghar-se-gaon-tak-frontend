@@ -7,7 +7,7 @@ const moment = require('moment');
 
 // User requests a return or replacement
 const requestReturnReplace = async (req, res) => {
-    const { orderId, type, reason, replacedProductInfo } = req.body;
+    const { orderId, type, reason, replacedProductInfo, originalItem } = req.body;
     const userId = req.user._id;
 
     try {
@@ -20,25 +20,28 @@ const requestReturnReplace = async (req, res) => {
 
         const existingRequest = await ReturnReplace.findOne({
             order: orderId,
+            'originalItem.product': originalItem.product,
+            'originalItem.size': originalItem.size,
             status: { $in: ['pending', 'out for pickup'] }
         });
         if (existingRequest) {
-            return res.status(400).json({ message: 'A return/replace request is already in progress for this order.' });
+            return res.status(400).json({ message: 'A return/replace request is already in progress for this particular item.' });
         }
 
-        if (type === 'replace' && order.isReplaced) {
-            return res.status(400).json({ message: 'This order has already been replaced. Only return is allowed now.' });
-        }
+        // if (type === 'replace' && order.isReplaced) {
+        //     return res.status(400).json({ message: 'This order has already been replaced. Only return is allowed now.' });
+        // }
 
-        if (type === 'return' && order.isReplaced) {
-            return res.status(400).json({ message: 'Cannot return while a replacement is in progress.' });
-        }
+        // if (type === 'return' && order.isReplaced) {
+        //     return res.status(400).json({ message: 'Cannot return while a replacement is in progress.' });
+        // }
 
         const returnReplaceRequest = new ReturnReplace({
             order: orderId,
             user: userId,
             type,
             reason,
+            originalItem,
             replacedItem: type === 'replace' ? replacedProductInfo : undefined
         });
 
@@ -89,15 +92,16 @@ const cancelReturnReplaceRequest = async (req, res) => {
 // Admin: get pending
 const getPendingRequests = async (req, res) => {
     try {
-        const pending = await ReturnReplace.find({ status: 'pending' })
-          .populate({
-    path: 'order',
-    select: 'orderNumber totalPrice status createdAt isReturned isReplaced orderItems shippingAddress',
-    populate: {
-        path: 'orderItems.product',
-        select: 'name images'
-    }
-})
+        const pending = await ReturnReplace.find({ status: { $in: ['pending', 'approved'] } })
+            .populate({
+                path: 'order',
+                select: 'orderNumber totalPrice status createdAt isReturned isReplaced orderItems shippingAddress',
+                populate: {
+                    path: 'orderItems.product',
+                    select: 'name images'
+                }
+            })
+            .populate('originalItem.product')
 
         res.json(pending);
     } catch (error) {
@@ -134,8 +138,38 @@ const updatePickupStatus = async (req, res) => {
         }
 
         request.status = status;
-        if (status === 'received') {
+        if (status === 'received' || status === 'completed' || status === 'exchanged') {
             request.pickupDeliveredAt = new Date();
+
+            if ((request.type === 'replace' || request.type === 'return') && status !== 'cancelled') {
+                const originalOrder = await Order.findById(request.order);
+                if (originalOrder) {
+                    const isReplace = request.type === 'replace';
+                    const itemData = isReplace ? request.replacedItem : request.originalItem;
+
+                    const newOrder = new Order({
+                        orderNumber: `${isReplace ? 'REP' : 'RET'}-${Date.now()}`,
+                        user: request.user,
+                        orderItems: [{
+                            name: itemData.name,
+                            qty: itemData.qty,
+                            price: 0,
+                            product: itemData.product,
+                            size: itemData.size
+                        }],
+                        shippingAddress: originalOrder.shippingAddress,
+                        customerInfo: originalOrder.customerInfo,
+                        paymentMethod: isReplace ? 'Replacement' : 'Return Pickup',
+                        totalPrice: 0,
+                        isPaid: true,
+                        isReplaced: false,
+                        isReturned: false,
+                        paidAt: Date.now(),
+                        customerLocation: originalOrder.customerLocation
+                    });
+                    await newOrder.save();
+                }
+            }
         }
         await request.save();
 
@@ -144,6 +178,54 @@ const updatePickupStatus = async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 };
+
+// Admin: completed requests
+const getAdminCompletedRequests = async (req, res) => {
+    try {
+        const completed = await ReturnReplace.find({ status: { $in: ['received', 'completed', 'exchanged'] } })
+            .populate('user', 'name email phone address')
+            .populate({
+                path: 'order',
+                select: 'orderNumber totalPrice shippingAddress orderItems',
+                populate: {
+                    path: 'orderItems.product',
+                    select: 'name images'
+                }
+            })
+            .populate('originalItem.product')
+            .sort({ updatedAt: -1 });
+
+        res.json(completed);
+    } catch (error) {
+        console.error('Error fetching completed requests:', error.message);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// Admin: cancelled requests
+const getAdminCancelledRequests = async (req, res) => {
+    try {
+        const cancelled = await ReturnReplace.find({ status: { $in: ['cancelled', 'rejected'] } })
+            .populate('user', 'name email phone address')
+            .populate({
+                path: 'order',
+                select: 'orderNumber totalPrice shippingAddress orderItems',
+                populate: {
+                    path: 'orderItems.product',
+                    select: 'name images'
+                }
+            })
+            .populate('originalItem.product')
+            .sort({ updatedAt: -1 });
+
+        res.json(cancelled);
+    } catch (error) {
+        console.error('Error fetching cancelled requests:', error.message);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
+// ... (Rest of file same until getAdminAssignedPickups function)
 
 // Delivery person: get pickups assigned to me
 const getMyPickups = async (req, res) => {
@@ -170,6 +252,7 @@ const getMyPendingRequests = async (req, res) => {
                     select: 'name images variants.size variants.countInStock'
                 }
             })
+            .populate('originalItem.product')
             .sort({ createdAt: -1 });
 
         res.json(requests);
@@ -191,50 +274,6 @@ const getCompletedPickups = async (req, res) => {
 
         res.json(completed);
     } catch (error) {
-        res.status(500).json({ message: 'Server Error' });
-    }
-};
-
-// Admin: completed requests
-const getAdminCompletedRequests = async (req, res) => {
-    try {
-        const completed = await ReturnReplace.find({ status: { $in: ['received', 'completed'] } })
-            .populate('user', 'name email phone address') // include phone + address
-            .populate({
-                path: 'order',
-                select: 'orderNumber totalPrice shippingAddress orderItems',
-                populate: {
-                    path: 'orderItems.product',
-                    select: 'name images'
-                }
-            })
-            .sort({ updatedAt: -1 });
-
-        res.json(completed);
-    } catch (error) {
-        console.error('Error fetching completed requests:', error.message);
-        res.status(500).json({ message: 'Server Error' });
-    }
-};
-
-// Admin: cancelled requests
-const getAdminCancelledRequests = async (req, res) => {
-    try {
-        const cancelled = await ReturnReplace.find({ status: 'cancelled' })
-            .populate('user', 'name email phone address')
-            .populate({
-                path: 'order',
-                select: 'orderNumber totalPrice shippingAddress orderItems',
-                populate: {
-                    path: 'orderItems.product',
-                    select: 'name images'
-                }
-            })
-            .sort({ updatedAt: -1 });
-
-        res.json(cancelled);
-    } catch (error) {
-        console.error('Error fetching cancelled requests:', error.message);
         res.status(500).json({ message: 'Server Error' });
     }
 };
@@ -261,6 +300,22 @@ const getAdminRejectedRequests = async (req, res) => {
     }
 };
 
+// Admin: approve request
+const approveReturnReplaceRequest = async (req, res) => {
+    const { requestId } = req.body;
+    try {
+        const request = await ReturnReplace.findById(requestId);
+        if (!request) return res.status(404).json({ message: 'Request not found' });
+
+        request.status = 'approved';
+        await request.save();
+
+        res.json({ message: 'Request approved successfully!', request });
+    } catch (error) {
+        console.error('Error approving request:', error.message);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
 
 // Admin: reject request
 const rejectReturnReplaceRequest = async (req, res) => {
@@ -290,7 +345,7 @@ const completeReturnReplaceRequest = async (req, res) => {
     try {
         const request = await ReturnReplace.findById(requestId);
         if (!request) return res.status(404).json({ message: 'Request not found' });
-        
+
         request.status = 'completed';
         await request.save();
 
@@ -300,9 +355,60 @@ const completeReturnReplaceRequest = async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 };
+
+// Admin: Manually update pickup status
+const updatePickupStatusByAdmin = async (req, res) => {
+    const { requestId, status } = req.body;
+    try {
+        const request = await ReturnReplace.findById(requestId);
+        if (!request) return res.status(404).json({ message: 'Request not found' });
+
+        request.status = status;
+        if (status === 'received' || status === 'completed' || status === 'exchanged') {
+            request.pickupDeliveredAt = new Date();
+
+            if ((request.type === 'replace' || request.type === 'return') && status !== 'cancelled') {
+                const originalOrder = await Order.findById(request.order);
+                if (originalOrder) {
+                    const isReplace = request.type === 'replace';
+                    const itemData = isReplace ? request.replacedItem : request.originalItem;
+
+                    const newOrder = new Order({
+                        orderNumber: `${isReplace ? 'REP' : 'RET'}-${Date.now()}`,
+                        user: request.user,
+                        orderItems: [{
+                            name: itemData.name,
+                            qty: itemData.qty,
+                            price: 0,
+                            product: itemData.product,
+                            size: itemData.size
+                        }],
+                        shippingAddress: originalOrder.shippingAddress,
+                        customerInfo: originalOrder.customerInfo,
+                        paymentMethod: isReplace ? 'Replacement' : 'Return Pickup',
+                        totalPrice: 0,
+                        isPaid: true,
+                        isReplaced: false,
+                        isReturned: false,
+                        paidAt: Date.now(),
+                        customerLocation: originalOrder.customerLocation
+                    });
+                    await newOrder.save();
+                }
+            }
+        }
+        await request.save();
+
+        res.json({ message: 'Status updated successfully', request });
+    } catch (error) {
+        console.error('Error updating status by admin:', error.message);
+        res.status(500).json({ message: 'Server Error' });
+    }
+};
+
 const getAdminAssignedPickups = async (req, res) => {
     try {
-        const assignedPickups = await ReturnReplace.find({ status: 'out for pickup' })
+        const assignedPickups = await ReturnReplace.find({ status: { $in: ['out for pickup', 'out for delivery'] } })
             .populate('user', 'name email phone address')
             .populate({
                 path: 'order',
@@ -312,6 +418,7 @@ const getAdminAssignedPickups = async (req, res) => {
                     select: 'name images'
                 }
             })
+            .populate('originalItem.product')
             .populate('pickupPerson', 'name email phone');
         res.json(assignedPickups);
     } catch (error) {
@@ -334,8 +441,10 @@ module.exports = {
     getAdminCancelledRequests,
     getAdminRejectedRequests,
     rejectReturnReplaceRequest,
+    approveReturnReplaceRequest,
     completeReturnReplaceRequest,
-    getAdminAssignedPickups
+    getAdminAssignedPickups,
+    updatePickupStatusByAdmin
 };
 
 

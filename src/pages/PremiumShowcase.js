@@ -365,7 +365,7 @@ const sections = [
     id: "b7",
     img: "https://images.unsplash.com/photo-1589923188900-85dae523342b?auto=format&fit=crop&w=1200&q=80",
     title: "The Pursuit of Health",
-    text: "From farm to fork, Rohtak Grocery Company is dedicated to your well-being. We believe that eating well is the first step to living a better, more vibrant life.",
+    text: "From farm to fork, Gaon se ghar tak is dedicated to your well-being. We believe that eating well is the first step to living a better, more vibrant life.",
   },
 ];
 

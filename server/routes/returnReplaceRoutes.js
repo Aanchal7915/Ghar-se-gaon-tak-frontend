@@ -25,8 +25,10 @@ router.get('/my-pickups', protect, deliveryPerson, returnReplaceController.getMy
 router.get('/my-pickups/completed', protect, deliveryPerson, returnReplaceController.getCompletedPickups);
 
 
+router.post('/admin/approve-request', protect, admin, returnReplaceController.approveReturnReplaceRequest);
 router.post('/admin/reject-request', protect, admin, returnReplaceController.rejectReturnReplaceRequest);
 router.get('/admin/assigned-pickups', protect, admin, returnReplaceController.getAdminAssignedPickups);
+router.post('/admin/update-status', protect, admin, returnReplaceController.updatePickupStatusByAdmin);
 
 
 module.exports = router;

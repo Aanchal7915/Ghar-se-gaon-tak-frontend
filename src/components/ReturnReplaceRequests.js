@@ -6,7 +6,7 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '../services/apiClient';
 import moment from 'moment';
 
-const ReturnReplaceRequests = ({ deliveryPartners }) => {
+const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab }) => {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -60,6 +60,42 @@ const ReturnReplaceRequests = ({ deliveryPartners }) => {
         }
     };
 
+    const handleApproveRequest = async (requestId) => {
+        if (window.confirm('Are you sure you want to approve this request?')) {
+            try {
+                const token = localStorage.getItem('token');
+                await apiClient.post(
+                    '/return-replace/admin/approve-request',
+                    { requestId },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                alert('Request approved successfully!');
+                fetchPendingRequests();
+            } catch (err) {
+                alert(err.response?.data?.message || 'Failed to approve request.');
+                console.error(err);
+            }
+        }
+    };
+
+    const handleMoveToUnassigned = async (requestId) => {
+        if (!window.confirm("Are you sure you want to move this request to unassigned deliveries?")) return;
+
+        try {
+            const token = localStorage.getItem('token');
+            await apiClient.post(
+                '/return-replace/admin/update-status',
+                { requestId: requestId, status: 'received' },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            await fetchPendingRequests();
+            setActiveTab('unassignedOrders');
+        } catch (err) {
+            console.error(err);
+            alert('Failed to update status.');
+        }
+    };
+
     const handleRejectRequest = async (requestId) => {
         // Prompt the admin for a rejection reason
         const reason = window.prompt("Please provide a reason for rejecting this request:");
@@ -101,21 +137,49 @@ const ReturnReplaceRequests = ({ deliveryPartners }) => {
                             <p><strong>Address:</strong> {request.order?.shippingAddress?.address}, {request.order?.shippingAddress?.city}, {request.order?.shippingAddress?.postalCode}</p>
 
                             <p><strong>Type:</strong> <span className="capitalize">{request.type}</span></p>
+                            <div className="flex items-center space-x-4 my-3 p-3 bg-gray-50 rounded-lg">
+                                {request.originalItem?.product?.images?.[0] ? (
+                                    <img
+                                        src={request.originalItem.product.images[0]}
+                                        alt={request.originalItem.name}
+                                        className="w-16 h-16 object-cover rounded shadow-sm"
+                                    />
+                                ) : (
+                                    <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-400">No Image</div>
+                                )}
+                                <div>
+                                    <p className="font-bold text-gray-800">{request.originalItem?.name || 'Product Details Not Available'}</p>
+                                    <p className="text-sm text-gray-500">Qty: {request.originalItem?.qty} | Pack: {request.originalItem?.size}</p>
+                                    <p className="text-sm font-bold text-indigo-600 font-sans">₹{request.originalItem?.price}</p>
+                                </div>
+                            </div>
                             <p><strong>Reason:</strong> {request.reason}</p>
-                            <p><strong>Status:</strong> <span className="capitalize">{request.status}</span></p>
+                            <p><strong>Status:</strong> <button onClick={() => handleMoveToUnassigned(request._id)} className="text-blue-600 font-bold hover:underline">Unassigned Deliveries</button></p>
                             <div className="mt-4 flex space-x-2">
-                                <button
-                                    onClick={() => handleAssignPickupClick(request)}
-                                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-                                >
-                                    Assign for Pickup
-                                </button>
-                                <button
-                                    onClick={() => handleRejectRequest(request._id)}
-                                    className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
-                                >
-                                    Reject Request
-                                </button>
+                                {request.status === 'pending' && (
+                                    <button
+                                        onClick={() => handleApproveRequest(request._id)}
+                                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                                    >
+                                        Approve Request
+                                    </button>
+                                )}
+                                {request.status === 'approved' && (
+                                    <button
+                                        onClick={() => handleAssignPickupClick(request)}
+                                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                                    >
+                                        Assign for Pickup
+                                    </button>
+                                )}
+                                {(request.status === 'pending' || request.status === 'approved') && (
+                                    <button
+                                        onClick={() => handleRejectRequest(request._id)}
+                                        className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                                    >
+                                        Reject Request
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ))

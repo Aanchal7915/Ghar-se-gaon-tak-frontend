@@ -144,38 +144,40 @@ exports.createOrder = async (req, res) => {
 //     }
 // };
 
-exports.getCompletedOrders = async (req, res) => {
-  const { month, year } = req.query;
-  let filter = { isDelivered: true };
 
-  if (month && year) {
-    // Use a more robust date parsing method to handle time zones
-    const startOfMonth = moment().year(year).month(month - 1).startOf('month').toDate();
-    const endOfMonth = moment().year(year).month(month - 1).endOf('month').toDate();
+// exports.getCompletedOrders = async (req, res) => {
+//   const { month, year } = req.query;
+//   let filter = { isDelivered: true };
 
-    console.log('Backend Filter Dates:');
-    console.log('Start of Month (Local Time):', startOfMonth);
-    console.log('End of Month (Local Time):', endOfMonth);
+//   if (month && year) {
+//     // Use a more robust date parsing method to handle time zones
+//     const startOfMonth = moment().year(year).month(month - 1).startOf('month').toDate();
+//     const endOfMonth = moment().year(year).month(month - 1).endOf('month').toDate();
 
-    filter.deliveredAt = { $gte: startOfMonth, $lte: endOfMonth };
-  }
+//     console.log('Backend Filter Dates:');
+//     console.log('Start of Month (Local Time):', startOfMonth);
+//     console.log('End of Month (Local Time):', endOfMonth);
 
-  try {
-    const completedOrders = await Order.find(filter)
-      .populate('user', 'name email phone')
-      .populate('assignedTo', 'name email');
+//     filter.deliveredAt = { $gte: startOfMonth, $lte: endOfMonth };
+//   }
 
-    console.log('Raw data received from DB (pre-filter):', completedOrders.map(order => ({
-      orderId: order.orderNumber,
-      deliveredAt: order.deliveredAt
-    })));
+//   try {
+//     const completedOrders = await Order.find(filter)
+//       .populate('user', 'name email phone')
+//       .populate('assignedTo', 'name email');
 
-    res.json(completedOrders);
-  } catch (error) {
-    console.error('Backend Error:', error);
-    res.status(500).json({ message: 'Server Error' });
-  }
-};
+//     console.log('Raw data received from DB (pre-filter):', completedOrders.map(order => ({
+//       orderId: order.orderNumber,
+//       deliveredAt: order.deliveredAt
+//     })));
+
+//     res.json(completedOrders);
+//   } catch (error) {
+//     console.error('Backend Error:', error);
+//     res.status(500).json({ message: 'Server Error' });
+//   }
+// };
+
 
 
 exports.createRazorpayOrder = async (req, res) => {

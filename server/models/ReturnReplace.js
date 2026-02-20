@@ -8,7 +8,7 @@ const returnReplaceSchema = new mongoose.Schema({
     rejectionReason: { type: String }, // Corrected the typo here
     status: {
         type: String,
-        enum: ['pending', 'out for pickup', 'received', 'completed', 'rejected', 'cancelled'],
+        enum: ['pending', 'approved', 'out for pickup', 'out for delivery', 'received', 'completed', 'exchanged', 'rejected', 'cancelled'],
         default: 'pending'
     },
     customerInfo: {
@@ -16,6 +16,14 @@ const returnReplaceSchema = new mongoose.Schema({
         email: String,
         phone: String,
         address: String
+    },
+    // The original item being returned or replaced
+    originalItem: {
+        name: { type: String },
+        qty: { type: Number },
+        price: { type: Number },
+        product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+        size: { type: String }
     },
     // The new item being sent in a replacement
     replacedItem: {
