@@ -23,12 +23,15 @@ const productSchema = new mongoose.Schema({
     size: { type: String, required: true },
     price: { type: Number, required: true },
     originalPrice: { type: Number }, // Standard/MRP price to show as strikethrough
+    discount: { type: Number },
     countInStock: { type: Number, required: true, default: 0 },
   }],
   pincodePricing: [{
     pincode: { type: String },
     location: { type: String },
     price: { type: Number },
+    originalPrice: { type: Number },
+    discount: { type: Number },
     inventory: { type: Number, default: 0 }
   }],
   videoUrl: { type: String }, // NEW FIELD for video (YouTube/Upload)

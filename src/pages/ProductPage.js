@@ -143,6 +143,7 @@ const ProductPage = () => {
       : null;
     const effectiveStock = pincodeRule ? Number(pincodeRule.inventory) : selectedVariant.countInStock;
     const effectivePrice = pincodeRule ? Number(pincodeRule.price) : selectedVariant.price;
+    const effectiveOriginalPrice = pincodeRule ? (pincodeRule.originalPrice || null) : (selectedVariant.originalPrice || null);
 
     if (selectedPincode && !pincodeRule) {
       alert("This product is not available for selected pincode.");
@@ -159,6 +160,7 @@ const ProductPage = () => {
       selectedVariant: {
         ...selectedVariant,
         price: effectivePrice,
+        originalPrice: effectiveOriginalPrice,
         countInStock: effectiveStock,
       },
     };
@@ -243,6 +245,7 @@ const ProductPage = () => {
     ? product?.pincodePricing?.find((entry) => entry.pincode === selectedPincode.trim())
     : null;
   const effectivePrice = pincodeRule ? Number(pincodeRule.price) : (selectedVariant ? selectedVariant.price : null);
+  const effectiveOriginalPrice = pincodeRule ? (pincodeRule.originalPrice || null) : (selectedVariant?.originalPrice || null);
   const effectiveStock = pincodeRule ? Number(pincodeRule.inventory) : (selectedVariant ? selectedVariant.countInStock : 0);
   const isUnavailableForPincode = selectedPincode && !pincodeRule;
   const availableLocations = [...new Set(
@@ -469,15 +472,15 @@ const ProductPage = () => {
               <span className="text-2xl md:text-3xl font-extrabold text-gray-900">
                 ₹{effectivePrice ?? "N/A"}
               </span>
-              {selectedVariant && selectedVariant.originalPrice && (
+              {effectiveOriginalPrice && (
                 <span className="text-base md:text-xl text-gray-400 font-medium">
-                  MRP: <span className="line-through decoration-red-500/40">₹{selectedVariant.originalPrice}</span>
+                  MRP: <span className="line-through decoration-red-500/40">₹{effectiveOriginalPrice}</span>
                 </span>
               )}
             </div>
-            {selectedVariant && selectedVariant.originalPrice && (
+            {effectiveOriginalPrice && (
               <span className="inline-block bg-green-100 text-green-700 text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full w-fit">
-                SAVE ₹{selectedVariant.originalPrice - (effectivePrice ?? selectedVariant.price)} ({Math.round(((selectedVariant.originalPrice - (effectivePrice ?? selectedVariant.price)) / selectedVariant.originalPrice) * 100)}% OFF)
+                SAVE ₹{effectiveOriginalPrice - (effectivePrice ?? selectedVariant.price)} ({Math.round(((effectiveOriginalPrice - (effectivePrice ?? selectedVariant.price)) / effectiveOriginalPrice) * 100)}% OFF)
               </span>
             )}
           </div>

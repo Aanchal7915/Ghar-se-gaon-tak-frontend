@@ -27,8 +27,8 @@ const ProductManagement = () => {
   const [newCategoryImage, setNewCategoryImage] = useState(null);
   const [newCategoryImagePreview, setNewCategoryImagePreview] = useState(null);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
-  const [variants, setVariants] = useState([{ size: '', price: '', originalPrice: '', countInStock: '' }]);
-  const [pincodePricingRows, setPincodePricingRows] = useState([{ pincodes: '', price: '', inventory: '' }]);
+  const [variants, setVariants] = useState([{ size: '', price: '', originalPrice: '', discount: '', countInStock: '' }]);
+  const [pincodePricingRows, setPincodePricingRows] = useState([{ pincodes: '', originalPrice: '', discount: '', price: '', inventory: '' }]);
   const [pincodeLocationMap, setPincodeLocationMap] = useState({});
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -168,12 +168,44 @@ const ProductManagement = () => {
   };
 
   const handleVariantChange = (index, e) => {
+    const { name, value } = e.target;
     const newVariants = [...variants];
-    newVariants[index][e.target.name] = e.target.value;
+    newVariants[index][name] = value;
+
+    const original = parseFloat(newVariants[index].originalPrice);
+    const disc = parseFloat(newVariants[index].discount);
+    const price = parseFloat(newVariants[index].price);
+
+    if (name === 'originalPrice') {
+      if (!isNaN(original) && original > 0) {
+        if (!isNaN(price)) {
+          newVariants[index].discount = (((original - price) / original) * 100).toFixed(2);
+        } else if (!isNaN(disc)) {
+          newVariants[index].price = Math.round(original - (original * disc / 100));
+        }
+      }
+    } else if (name === 'discount') {
+      if (!isNaN(disc)) {
+        if (!isNaN(price) && disc < 100) {
+          newVariants[index].originalPrice = Math.round(price / (1 - disc / 100));
+        } else if (!isNaN(original)) {
+          newVariants[index].price = Math.round(original - (original * disc / 100));
+        }
+      }
+    } else if (name === 'price') {
+      if (!isNaN(price)) {
+        if (!isNaN(original) && original > 0) {
+          newVariants[index].discount = (((original - price) / original) * 100).toFixed(2);
+        } else if (!isNaN(disc) && disc < 100) {
+          newVariants[index].originalPrice = Math.round(price / (1 - disc / 100));
+        }
+      }
+    }
+
     setVariants(newVariants);
   };
 
-  const addVariant = () => setVariants([...variants, { size: '', price: '', originalPrice: '', countInStock: '' }]);
+  const addVariant = () => setVariants([...variants, { size: '', price: '', originalPrice: '', discount: '', countInStock: '' }]);
   const removeVariant = (index) => {
     const newVariants = [...variants];
     newVariants.splice(index, 1);
@@ -181,16 +213,48 @@ const ProductManagement = () => {
   };
 
   const handlePincodeRowChange = (index, e) => {
+    const { name, value } = e.target;
     const updated = [...pincodePricingRows];
-    updated[index][e.target.name] = e.target.value;
+    updated[index][name] = value;
+
+    const original = parseFloat(updated[index].originalPrice);
+    const disc = parseFloat(updated[index].discount);
+    const price = parseFloat(updated[index].price);
+
+    if (name === 'originalPrice') {
+      if (!isNaN(original) && original > 0) {
+        if (!isNaN(price)) {
+          updated[index].discount = (((original - price) / original) * 100).toFixed(2);
+        } else if (!isNaN(disc)) {
+          updated[index].price = Math.round(original - (original * disc / 100));
+        }
+      }
+    } else if (name === 'discount') {
+      if (!isNaN(disc)) {
+        if (!isNaN(price) && disc < 100) {
+          updated[index].originalPrice = Math.round(price / (1 - disc / 100));
+        } else if (!isNaN(original)) {
+          updated[index].price = Math.round(original - (original * disc / 100));
+        }
+      }
+    } else if (name === 'price') {
+      if (!isNaN(price)) {
+        if (!isNaN(original) && original > 0) {
+          updated[index].discount = (((original - price) / original) * 100).toFixed(2);
+        } else if (!isNaN(disc) && disc < 100) {
+          updated[index].originalPrice = Math.round(price / (1 - disc / 100));
+        }
+      }
+    }
+
     setPincodePricingRows(updated);
   };
 
-  const addPincodeRow = () => setPincodePricingRows([...pincodePricingRows, { pincodes: '', price: '', inventory: '' }]);
+  const addPincodeRow = () => setPincodePricingRows([...pincodePricingRows, { pincodes: '', originalPrice: '', discount: '', price: '', inventory: '' }]);
   const removePincodeRow = (index) => {
     const updated = [...pincodePricingRows];
     updated.splice(index, 1);
-    setPincodePricingRows(updated.length ? updated : [{ pincodes: '', price: '', inventory: '' }]);
+    setPincodePricingRows(updated.length ? updated : [{ pincodes: '', originalPrice: '', discount: '', price: '', inventory: '' }]);
   };
 
   const buildPincodePricingPayload = () => {
@@ -202,6 +266,8 @@ const ProductManagement = () => {
           expanded.push({
             pincode,
             location: pincodeLocationMap[pincode] || '',
+            originalPrice: row.originalPrice !== '' ? Number(row.originalPrice) : null,
+            discount: row.discount !== '' ? Number(row.discount) : null,
             price: Number(row.price),
             inventory: Number(row.inventory),
           });
@@ -256,16 +322,19 @@ const ProductManagement = () => {
     });
     setVariants(product.variants.map(v => ({
       ...v,
-      originalPrice: v.originalPrice || ''
+      originalPrice: v.originalPrice || '',
+      discount: v.discount || ''
     })));
     setPincodePricingRows(
       product.pincodePricing && product.pincodePricing.length > 0
         ? product.pincodePricing.map((entry) => ({
           pincodes: entry.pincode || '',
+          originalPrice: entry.originalPrice ?? '',
+          discount: entry.discount ?? '',
           price: entry.price ?? '',
           inventory: entry.inventory ?? '',
         }))
-        : [{ pincodes: '', price: '', inventory: '' }]
+        : [{ pincodes: '', originalPrice: '', discount: '', price: '', inventory: '' }]
     );
     setPincodeLocationMap(
       (product.pincodePricing || []).reduce((acc, entry) => {
@@ -339,8 +408,8 @@ const ProductManagement = () => {
       farmerEmail: '',
       isComingSoon: false
     });
-    setVariants([{ size: '', price: '', originalPrice: '', countInStock: '' }]);
-    setPincodePricingRows([{ pincodes: '', price: '', inventory: '' }]);
+    setVariants([{ size: '', price: '', originalPrice: '', discount: '', countInStock: '' }]);
+    setPincodePricingRows([{ pincodes: '', originalPrice: '', discount: '', price: '', inventory: '' }]);
     setPincodeLocationMap({});
     setImages([]);
     setImagePreviews([]);
@@ -575,6 +644,7 @@ const ProductManagement = () => {
           <div key={index} className="flex space-x-2">
             <input type="text" name="size" value={variant.size} onChange={(e) => handleVariantChange(index, e)} placeholder="Pack/Size" className="w-full p-2 border rounded-md" required />
             <input type="number" name="originalPrice" value={variant.originalPrice} onChange={(e) => handleVariantChange(index, e)} placeholder="Original Price" className="w-full p-2 border rounded-md" />
+            <input type="number" name="discount" value={variant.discount} onChange={(e) => handleVariantChange(index, e)} placeholder="Disc %" className="w-full p-2 border rounded-md" />
             <input type="number" name="price" value={variant.price} onChange={(e) => handleVariantChange(index, e)} placeholder="Selling Price" className="w-full p-2 border rounded-md" required />
             <input type="number" name="countInStock" value={variant.countInStock} onChange={(e) => handleVariantChange(index, e)} placeholder="Stock" className="w-full p-2 border rounded-md" required />
             <button type="button" onClick={() => removeVariant(index)} className="bg-red-500 text-white p-2 rounded-md">-</button>
@@ -596,10 +666,26 @@ const ProductManagement = () => {
               />
               <input
                 type="number"
+                name="originalPrice"
+                value={row.originalPrice}
+                onChange={(e) => handlePincodeRowChange(index, e)}
+                placeholder="Original Price"
+                className="w-full p-2 border rounded-md"
+              />
+              <input
+                type="number"
+                name="discount"
+                value={row.discount}
+                onChange={(e) => handlePincodeRowChange(index, e)}
+                placeholder="Disc %"
+                className="w-full p-2 border rounded-md"
+              />
+              <input
+                type="number"
                 name="price"
                 value={row.price}
                 onChange={(e) => handlePincodeRowChange(index, e)}
-                placeholder="Price"
+                placeholder="Selling Price"
                 className="w-full p-2 border rounded-md"
               />
               <input

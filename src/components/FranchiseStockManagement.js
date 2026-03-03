@@ -43,6 +43,7 @@ const FranchiseStockManagement = () => {
                     locations[locKey].products.push({
                         ...product,
                         localPrice: pricing.price,
+                        localOriginalPrice: pricing.originalPrice,
                         localStock: pricing.inventory,
                         pincode: pricing.pincode
                     });
@@ -60,6 +61,7 @@ const FranchiseStockManagement = () => {
                 locations[locKey].products.push({
                     ...product,
                     localPrice: product.variants?.[0]?.price || 'N/A',
+                    localOriginalPrice: product.variants?.[0]?.originalPrice || null,
                     localStock: product.variants?.reduce((acc, v) => acc + (v.countInStock || 0), 0) || 0,
                     pincode: 'Global'
                 });
@@ -179,7 +181,12 @@ const FranchiseStockManagement = () => {
                                                             </div>
                                                         </td>
                                                         <td className="px-6 py-4 text-right">
-                                                            <div className="text-sm font-bold text-gray-800">₹{prod.localPrice}</div>
+                                                            <div className="flex flex-col items-end">
+                                                                <div className="text-sm font-bold text-gray-800">₹{prod.localPrice}</div>
+                                                                {prod.localOriginalPrice && (
+                                                                    <div className="text-[10px] text-gray-400 line-through">₹{prod.localOriginalPrice}</div>
+                                                                )}
+                                                            </div>
                                                         </td>
                                                     </tr>
                                                 ))}
