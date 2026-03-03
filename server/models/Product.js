@@ -29,6 +29,7 @@ const productSchema = new mongoose.Schema({
   pincodePricing: [{
     pincode: { type: String },
     location: { type: String },
+    size: { type: String },
     price: { type: Number },
     originalPrice: { type: Number },
     discount: { type: Number },

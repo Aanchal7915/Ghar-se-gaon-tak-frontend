@@ -45,7 +45,8 @@ const FranchiseStockManagement = () => {
                         localPrice: pricing.price,
                         localOriginalPrice: pricing.originalPrice,
                         localStock: pricing.inventory,
-                        pincode: pricing.pincode
+                        pincode: pricing.pincode,
+                        localSize: pricing.size
                     });
                 });
             } else {
@@ -63,7 +64,8 @@ const FranchiseStockManagement = () => {
                     localPrice: product.variants?.[0]?.price || 'N/A',
                     localOriginalPrice: product.variants?.[0]?.originalPrice || null,
                     localStock: product.variants?.reduce((acc, v) => acc + (v.countInStock || 0), 0) || 0,
-                    pincode: 'Global'
+                    pincode: 'Global',
+                    localSize: product.variants?.[0]?.size || 'N/A'
                 });
             }
         });
@@ -147,6 +149,7 @@ const FranchiseStockManagement = () => {
                                                 <tr>
                                                     <th className="px-6 py-3">Product</th>
                                                     <th className="px-6 py-3">Pincode</th>
+                                                    <th className="px-6 py-3">Size</th>
                                                     <th className="px-6 py-3">Stock Status</th>
                                                     <th className="px-6 py-3 text-right">Selling Price</th>
                                                 </tr>
@@ -171,6 +174,9 @@ const FranchiseStockManagement = () => {
                                                             <span className="text-[11px] font-medium font-sans bg-blue-50 text-blue-600 px-2 py-1 rounded border border-blue-100 uppercase tracking-tighter">
                                                                 {prod.pincode}
                                                             </span>
+                                                        </td>
+                                                        <td className="px-6 py-4">
+                                                            <span className="text-xs font-bold text-gray-600">{prod.localSize}</span>
                                                         </td>
                                                         <td className="px-6 py-4">
                                                             <div className="flex items-center gap-2">

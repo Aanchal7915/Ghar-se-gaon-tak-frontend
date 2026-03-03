@@ -39,8 +39,36 @@ const ProductPage = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [selectedPincode, setSelectedPincode] = useState(() => localStorage.getItem("selectedPincode") || '');
 
-  // detect mobile
+  // Detect mobile
   const isMobile = window.matchMedia("(pointer: coarse)").matches;
+
+  // Persist pincode
+  useEffect(() => {
+    if (selectedPincode.length === 6) {
+      localStorage.setItem("selectedPincode", selectedPincode);
+      window.dispatchEvent(new Event("pincode-updated"));
+    }
+  }, [selectedPincode]);
+
+  // Merge variants from global list and pincode rules
+  const availableVariants = React.useMemo(() => {
+    if (!product) return [];
+    const vars = [...(product.variants || [])];
+    const pincodeSizes = [...new Set((product.pincodePricing || []).map(p => p.size))].filter(Boolean);
+
+    pincodeSizes.forEach(size => {
+      if (!vars.find(v => v.size === size)) {
+        vars.push({
+          size,
+          price: null,
+          originalPrice: null,
+          countInStock: 0,
+          _id: `pincode-${size}`
+        });
+      }
+    });
+    return vars;
+  }, [product]);
 
   const isNewArrival = (creationTime) => {
     const oneDay = 24 * 60 * 60 * 1000;
@@ -67,16 +95,9 @@ const ProductPage = () => {
         setProduct(response.data);
 
         if (response.data.variants && response.data.variants.length > 0) {
-          const firstAvailableVariant = response.data.variants.find(
-            (v) => v.countInStock > 0
-          );
-          if (firstAvailableVariant) {
-            setSelectedVariant(firstAvailableVariant);
-
-            // Generate product-based ratings and reviews
-            const ratingInfo = generateReviews(response.data._id);
-            setDynamicRating(ratingInfo);
-          }
+          // Initial selection logic moved to separate useEffect
+          const ratingInfo = generateReviews(response.data._id);
+          setDynamicRating(ratingInfo);
         }
       } catch (err) {
         setError("Product not found.");
@@ -117,17 +138,26 @@ const ProductPage = () => {
     setIsWishlisted(isInWishlist);
   }, [id, user, wishlist]);
 
+  // Handle auto-selecting variant based on pincode and availability
   useEffect(() => {
-    const syncPincode = () => {
-      setSelectedPincode(localStorage.getItem("selectedPincode") || "");
-    };
-    window.addEventListener("pincode-updated", syncPincode);
-    window.addEventListener("storage", syncPincode);
-    return () => {
-      window.removeEventListener("pincode-updated", syncPincode);
-      window.removeEventListener("storage", syncPincode);
-    };
-  }, []);
+    if (product && availableVariants.length > 0) {
+      const bestVariant = availableVariants.find(v => {
+        const rule = selectedPincode.length === 6
+          ? product.pincodePricing?.find(p => p.pincode === selectedPincode.trim() && p.size === v.size)
+          : null;
+        const stock = selectedPincode.length === 6
+          ? (rule ? Number(rule.inventory) : 0)
+          : Number(v.countInStock);
+        return stock > 0;
+      });
+
+      if (bestVariant) {
+        setSelectedVariant(bestVariant);
+      } else if (!selectedVariant) {
+        setSelectedVariant(availableVariants[0]);
+      }
+    }
+  }, [product, selectedPincode, availableVariants]);
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
@@ -138,8 +168,8 @@ const ProductPage = () => {
       alert("Please select a pack size first.");
       return;
     }
-    const pincodeRule = selectedPincode
-      ? product?.pincodePricing?.find((entry) => entry.pincode === selectedPincode.trim())
+    const pincodeRule = (selectedPincode && selectedVariant)
+      ? product?.pincodePricing?.find((entry) => entry.pincode === selectedPincode.trim() && entry.size === selectedVariant.size)
       : null;
     const effectiveStock = pincodeRule ? Number(pincodeRule.inventory) : selectedVariant.countInStock;
     const effectivePrice = pincodeRule ? Number(pincodeRule.price) : selectedVariant.price;
@@ -169,8 +199,9 @@ const ProductPage = () => {
   };
 
   const isVideo = (url) => {
-    const videoExtensions = [".mp4", ".mov", ".webm", ".ogg"];
-    return videoExtensions.some((ext) => url.endsWith(ext));
+    if (!url) return false;
+    const videoExtensions = [".mp4", ".mov", ".webm", ".ogg", ".m4v"];
+    return videoExtensions.some((ext) => url.toLowerCase().includes(ext)) || url.includes("/video/upload/");
   };
 
   const maskPhoneNumber = (phone = "") => {
@@ -241,13 +272,18 @@ const ProductPage = () => {
       </p>
     ));
 
-  const pincodeRule = selectedPincode
-    ? product?.pincodePricing?.find((entry) => entry.pincode === selectedPincode.trim())
+  const pincodeRule = (selectedPincode && selectedVariant)
+    ? product?.pincodePricing?.find((entry) => entry.pincode === selectedPincode.trim() && entry.size === selectedVariant.size)
     : null;
-  const effectivePrice = pincodeRule ? Number(pincodeRule.price) : (selectedVariant ? selectedVariant.price : null);
-  const effectiveOriginalPrice = pincodeRule ? (pincodeRule.originalPrice || null) : (selectedVariant?.originalPrice || null);
-  const effectiveStock = pincodeRule ? Number(pincodeRule.inventory) : (selectedVariant ? selectedVariant.countInStock : 0);
-  const isUnavailableForPincode = selectedPincode && !pincodeRule;
+
+  // Fallback prices if no specific rule exists for this pincode
+  const fallbackPrice = selectedVariant?.price || product?.pincodePricing?.find(p => p.size === selectedVariant?.size && p.price)?.price;
+  const fallbackOriginalPrice = selectedVariant?.originalPrice || product?.pincodePricing?.find(p => p.size === selectedVariant?.size && p.originalPrice)?.originalPrice;
+
+  const effectivePrice = pincodeRule ? Number(pincodeRule.price) : (fallbackPrice ? Number(fallbackPrice) : null);
+  const effectiveOriginalPrice = pincodeRule ? (pincodeRule.originalPrice || null) : (fallbackOriginalPrice || null);
+  const effectiveStock = pincodeRule ? Number(pincodeRule.inventory) : (selectedVariant && !selectedPincode ? selectedVariant.countInStock : 0);
+  const isUnavailableForPincode = selectedPincode.length === 6 && !pincodeRule;
   const availableLocations = [...new Set(
     (product?.pincodePricing || [])
       .map((entry) => entry.location)
@@ -299,6 +335,7 @@ const ProductPage = () => {
                 autoPlay
                 loop
                 muted
+                playsInline
                 className="w-full h-full object-contain p-4"
               />
             ) : (
@@ -311,10 +348,10 @@ const ProductPage = () => {
             )}
 
             {/* Out of Stock Overlay like Blinkit */}
-            {selectedVariant && (effectiveStock <= 0 || isUnavailableForPincode) && (
+            {selectedVariant && (effectiveStock <= 0 || (selectedPincode.length === 6 && !pincodeRule)) && (
               <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-20 flex items-center justify-center">
-                <div className="bg-red-600 text-white font-black px-6 py-2 rounded-lg shadow-xl transform -rotate-12 scale-110 border-2 border-white">
-                  OUT OF STOCK
+                <div className="bg-red-600 text-white font-black px-6 py-2 rounded-lg shadow-xl transform -rotate-12 scale-110 border-2 border-white text-center">
+                  {selectedPincode.length === 6 && !pincodeRule ? 'NOT AVAILABLE AT PINCODE' : 'OUT OF STOCK'}
                 </div>
               </div>
             )}
@@ -390,7 +427,7 @@ const ProductPage = () => {
                 }}
               >
                 {isVideo(img) ? (
-                  <video src={img} className="w-full h-full object-cover" />
+                  <video src={img} muted playsInline className="w-full h-full object-cover" />
                 ) : (
                   <img
                     src={img}
@@ -480,7 +517,7 @@ const ProductPage = () => {
             </div>
             {effectiveOriginalPrice && (
               <span className="inline-block bg-green-100 text-green-700 text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full w-fit">
-                SAVE ₹{effectiveOriginalPrice - (effectivePrice ?? selectedVariant.price)} ({Math.round(((effectiveOriginalPrice - (effectivePrice ?? selectedVariant.price)) / effectiveOriginalPrice) * 100)}% OFF)
+                SAVE ₹{effectiveOriginalPrice - (effectivePrice ?? (selectedVariant?.price || 0))} ({Math.round(((effectiveOriginalPrice - (effectivePrice ?? (selectedVariant?.price || 0))) / effectiveOriginalPrice) * 100)}% OFF)
               </span>
             )}
           </div>
@@ -516,9 +553,16 @@ const ProductPage = () => {
           <div className="mt-6">
             <h4 className="font-semibold text-gray-800 mb-2 text-sm md:text-base">Select Pack Size:</h4>
             <div className="grid grid-cols-4 md:grid-cols-5 gap-2">
-              {product.variants.map((variant, index) => {
+              {availableVariants.map((variant, index) => {
                 const isSelected = selectedVariant?.size === variant.size;
-                const isOutOfStock = variant.countInStock <= 0;
+                const rule = selectedPincode.length === 6
+                  ? product.pincodePricing?.find(p => p.pincode === selectedPincode.trim() && p.size === variant.size)
+                  : null;
+                const stock = selectedPincode.length === 6
+                  ? (rule ? Number(rule.inventory) : 0)
+                  : Number(variant.countInStock);
+                const isOutOfStock = stock <= 0;
+                const isUnavailableHere = selectedPincode.length === 6 && !rule;
 
                 return (
                   <button
@@ -527,24 +571,24 @@ const ProductPage = () => {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      if (!isOutOfStock) {
-                        setSelectedVariant(variant);
-                      }
+                      setSelectedVariant(variant);
                     }}
                     className={`py-1 md:py-2 px-2 rounded-md font-medium text-[9px] md:text-xs transition-all duration-300 border shadow-sm relative z-30 flex flex-col items-center justify-center min-h-[45px]
                       ${isSelected
                         ? "bg-gray-900 text-white border-gray-900 transform scale-105"
                         : "bg-white text-gray-800 border-gray-300 hover:border-gray-900"
                       }
-                      ${isOutOfStock
-                        ? "opacity-60 grayscale cursor-not-allowed bg-gray-50 text-gray-400 border-gray-200"
+                      ${(isOutOfStock || isUnavailableHere)
+                        ? "opacity-60 grayscale bg-gray-50 text-gray-400 border-gray-200"
                         : "hover:shadow-md cursor-pointer active:scale-95"
                       }`}
                   >
                     <span>{variant.size}</span>
-                    {isOutOfStock && (
+                    {isUnavailableHere ? (
+                      <span className="text-[7px] md:text-[8px] font-bold text-orange-500 mt-0.5 uppercase">N/A Here</span>
+                    ) : isOutOfStock ? (
                       <span className="text-[7px] md:text-[8px] font-bold text-red-500 mt-0.5 uppercase">Out of stock</span>
-                    )}
+                    ) : null}
                   </button>
                 );
               })}
@@ -703,7 +747,7 @@ const ProductPage = () => {
             </button>
           </div>
 
-          <div className="grid grid-cols-4 md:grid-cols-8 gap-2 md:gap-4">
+          <div className="grid grid-cols-3 md:grid-cols-8 gap-2 md:gap-4">
             {similarProducts.map((p) => (
               <motion.div
                 key={p._id}

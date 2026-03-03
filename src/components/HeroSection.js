@@ -37,8 +37,8 @@ const HeroSection = () => {
       try {
         setLoading(true);
         const response = await apiClient.get('/categories');
-        // Show up to 8 categories on the home page per user instruction
-        setCategories(response.data.slice(0, 8));
+        // Show 5 categories on the home page for a clean single row design
+        setCategories(response.data.slice(0, 5));
       } catch (error) {
         console.error('Failed to fetch categories:', error);
       } finally {
@@ -101,8 +101,8 @@ const HeroSection = () => {
         </motion.div>
 
 
-        {/* Dome Cards Container - Updated for 8 columns on laptop and 4 on mobile */}
-        <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 md:gap-4 w-full max-w-[1400px] px-0 md:px-4 pb-16 min-h-[120px] md:min-h-[200px] items-start justify-center">
+        {/* Dome Cards Container - Updated for 5 columns on laptop and 4 on mobile */}
+        <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-5 gap-2 md:gap-4 w-full max-w-[1400px] px-0 md:px-4 pb-16 min-h-[120px] md:min-h-[200px] items-start justify-center">
           {loading ? (
             <div className="col-span-full flex flex-col items-center justify-center py-10">
               <motion.div

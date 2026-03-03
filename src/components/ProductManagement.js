@@ -28,7 +28,7 @@ const ProductManagement = () => {
   const [newCategoryImagePreview, setNewCategoryImagePreview] = useState(null);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [variants, setVariants] = useState([{ size: '', price: '', originalPrice: '', discount: '', countInStock: '' }]);
-  const [pincodePricingRows, setPincodePricingRows] = useState([{ pincodes: '', originalPrice: '', discount: '', price: '', inventory: '' }]);
+  const [pincodePricingRows, setPincodePricingRows] = useState([{ pincodes: '', size: '', originalPrice: '', discount: '', price: '', inventory: '' }]);
   const [pincodeLocationMap, setPincodeLocationMap] = useState({});
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
@@ -250,11 +250,11 @@ const ProductManagement = () => {
     setPincodePricingRows(updated);
   };
 
-  const addPincodeRow = () => setPincodePricingRows([...pincodePricingRows, { pincodes: '', originalPrice: '', discount: '', price: '', inventory: '' }]);
+  const addPincodeRow = () => setPincodePricingRows([...pincodePricingRows, { pincodes: '', size: '', originalPrice: '', discount: '', price: '', inventory: '' }]);
   const removePincodeRow = (index) => {
     const updated = [...pincodePricingRows];
     updated.splice(index, 1);
-    setPincodePricingRows(updated.length ? updated : [{ pincodes: '', originalPrice: '', discount: '', price: '', inventory: '' }]);
+    setPincodePricingRows(updated.length ? updated : [{ pincodes: '', size: '', originalPrice: '', discount: '', price: '', inventory: '' }]);
   };
 
   const buildPincodePricingPayload = () => {
@@ -266,6 +266,7 @@ const ProductManagement = () => {
           expanded.push({
             pincode,
             location: pincodeLocationMap[pincode] || '',
+            size: row.size,
             originalPrice: row.originalPrice !== '' ? Number(row.originalPrice) : null,
             discount: row.discount !== '' ? Number(row.discount) : null,
             price: Number(row.price),
@@ -329,12 +330,13 @@ const ProductManagement = () => {
       product.pincodePricing && product.pincodePricing.length > 0
         ? product.pincodePricing.map((entry) => ({
           pincodes: entry.pincode || '',
+          size: entry.size || '',
           originalPrice: entry.originalPrice ?? '',
           discount: entry.discount ?? '',
           price: entry.price ?? '',
           inventory: entry.inventory ?? '',
         }))
-        : [{ pincodes: '', originalPrice: '', discount: '', price: '', inventory: '' }]
+        : [{ pincodes: '', size: '', originalPrice: '', discount: '', price: '', inventory: '' }]
     );
     setPincodeLocationMap(
       (product.pincodePricing || []).reduce((acc, entry) => {
@@ -409,7 +411,7 @@ const ProductManagement = () => {
       isComingSoon: false
     });
     setVariants([{ size: '', price: '', originalPrice: '', discount: '', countInStock: '' }]);
-    setPincodePricingRows([{ pincodes: '', originalPrice: '', discount: '', price: '', inventory: '' }]);
+    setPincodePricingRows([{ pincodes: '', size: '', originalPrice: '', discount: '', price: '', inventory: '' }]);
     setPincodeLocationMap({});
     setImages([]);
     setImagePreviews([]);
@@ -665,6 +667,15 @@ const ProductManagement = () => {
                 className="w-full p-2 border rounded-md"
               />
               <input
+                type="text"
+                name="size"
+                value={row.size}
+                onChange={(e) => handlePincodeRowChange(index, e)}
+                placeholder="Pack Size"
+                className="w-full p-2 border rounded-md"
+                required
+              />
+              <input
                 type="number"
                 name="originalPrice"
                 value={row.originalPrice}
@@ -758,7 +769,7 @@ const ProductManagement = () => {
                   Pincode Rules: {product.pincodePricing && product.pincodePricing.length > 0
                     ? product.pincodePricing.map((rule, idx) => (
                       <span key={`pincode-${product._id}-${idx}`} className="mr-2">
-                        {rule.pincode} ({rule.location || 'Location N/A'} - Rs.{rule.price}): Qty {rule.inventory}
+                        {rule.pincode} ({rule.location || 'Location N/A'} - {rule.size} - Rs.{rule.price}): Qty {rule.inventory}
                       </span>
                     ))
                     : 'N/A'}
