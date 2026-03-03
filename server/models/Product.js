@@ -25,6 +25,12 @@ const productSchema = new mongoose.Schema({
     originalPrice: { type: Number }, // Standard/MRP price to show as strikethrough
     countInStock: { type: Number, required: true, default: 0 },
   }],
+  pincodePricing: [{
+    pincode: { type: String },
+    location: { type: String },
+    price: { type: Number },
+    inventory: { type: Number, default: 0 }
+  }],
   videoUrl: { type: String }, // NEW FIELD for video (YouTube/Upload)
   farmerName: { type: String },
   farmerPhone: { type: String },

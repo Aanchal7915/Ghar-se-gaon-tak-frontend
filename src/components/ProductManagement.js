@@ -28,6 +28,8 @@ const ProductManagement = () => {
   const [newCategoryImagePreview, setNewCategoryImagePreview] = useState(null);
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [variants, setVariants] = useState([{ size: '', price: '', originalPrice: '', countInStock: '' }]);
+  const [pincodePricingRows, setPincodePricingRows] = useState([{ pincodes: '', price: '', inventory: '' }]);
+  const [pincodeLocationMap, setPincodeLocationMap] = useState({});
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
@@ -40,6 +42,66 @@ const ProductManagement = () => {
     fetchProducts();
     fetchCategories();
   }, [refreshCategories, refreshProducts]);
+
+  const extractPincodes = (value = '') => value
+    .split(',')
+    .map((p) => p.trim())
+    .filter((p) => /^\d{6}$/.test(p));
+
+  const resolvePincodeLocation = async (pincode) => {
+    try {
+      const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+      const data = await response.json();
+      const postOffice = data?.[0]?.PostOffice?.[0];
+      if (!postOffice) return '';
+      return `${postOffice.District}, ${postOffice.State}`;
+    } catch (error) {
+      return '';
+    }
+  };
+
+  useEffect(() => {
+    const allPincodes = [...new Set(
+      pincodePricingRows.flatMap((row) => extractPincodes(row.pincodes))
+    )];
+
+    if (!allPincodes.length) return;
+
+    let isMounted = true;
+    const fetchLocations = async () => {
+      for (const pincode of allPincodes) {
+        if (pincodeLocationMap[pincode]) continue;
+        const location = await resolvePincodeLocation(pincode);
+        if (!isMounted || !location) continue;
+        setPincodeLocationMap((prev) => (prev[pincode] ? prev : { ...prev, [pincode]: location }));
+      }
+    };
+
+    fetchLocations();
+    return () => {
+      isMounted = false;
+    };
+  }, [pincodePricingRows, pincodeLocationMap]);
+
+  useEffect(() => {
+    const allPincodes = [...new Set(
+      pincodePricingRows.flatMap((row) => extractPincodes(row.pincodes))
+    )];
+    if (!allPincodes.length) return;
+
+    const uniqueLocations = [...new Set(
+      allPincodes
+        .map((pincode) => pincodeLocationMap[pincode])
+        .filter(Boolean)
+    )];
+
+    if (!uniqueLocations.length) return;
+
+    const mergedLocation = uniqueLocations.join(', ');
+    setFormData((prev) => (
+      prev.farmerLocation === mergedLocation ? prev : { ...prev, farmerLocation: mergedLocation }
+    ));
+  }, [pincodePricingRows, pincodeLocationMap]);
 
   const fetchProducts = async () => {
     try {
@@ -103,12 +165,43 @@ const ProductManagement = () => {
     setVariants(newVariants);
   };
 
+  const handlePincodeRowChange = (index, e) => {
+    const updated = [...pincodePricingRows];
+    updated[index][e.target.name] = e.target.value;
+    setPincodePricingRows(updated);
+  };
+
+  const addPincodeRow = () => setPincodePricingRows([...pincodePricingRows, { pincodes: '', price: '', inventory: '' }]);
+  const removePincodeRow = (index) => {
+    const updated = [...pincodePricingRows];
+    updated.splice(index, 1);
+    setPincodePricingRows(updated.length ? updated : [{ pincodes: '', price: '', inventory: '' }]);
+  };
+
+  const buildPincodePricingPayload = () => {
+    const expanded = [];
+    pincodePricingRows.forEach((row) => {
+      if (!row.pincodes || row.price === '' || row.inventory === '') return;
+      extractPincodes(row.pincodes)
+        .forEach((pincode) => {
+          expanded.push({
+            pincode,
+            location: pincodeLocationMap[pincode] || '',
+            price: Number(row.price),
+            inventory: Number(row.inventory),
+          });
+        });
+    });
+    return expanded;
+  };
+
   const handleAddProduct = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
     const data = new FormData();
     for (const key in formData) data.append(key, formData[key]);
     data.append('variants', JSON.stringify(variants));
+    data.append('pincodePricing', JSON.stringify(buildPincodePricingPayload()));
     for (const image of images) data.append('images', image);
     if (videoFile) data.append('video', videoFile);
 
@@ -150,6 +243,21 @@ const ProductManagement = () => {
       ...v,
       originalPrice: v.originalPrice || ''
     })));
+    setPincodePricingRows(
+      product.pincodePricing && product.pincodePricing.length > 0
+        ? product.pincodePricing.map((entry) => ({
+            pincodes: entry.pincode || '',
+            price: entry.price ?? '',
+            inventory: entry.inventory ?? '',
+          }))
+        : [{ pincodes: '', price: '', inventory: '' }]
+    );
+    setPincodeLocationMap(
+      (product.pincodePricing || []).reduce((acc, entry) => {
+        if (entry.pincode && entry.location) acc[entry.pincode] = entry.location;
+        return acc;
+      }, {})
+    );
     setExistingImages(product.images);
     setImages([]);
     setImagePreviews([]);
@@ -162,6 +270,7 @@ const ProductManagement = () => {
     const data = new FormData();
     for (const key in formData) data.append(key, formData[key]);
     data.append('variants', JSON.stringify(variants));
+    data.append('pincodePricing', JSON.stringify(buildPincodePricingPayload()));
     for (const image of images) data.append('images', image);
     for (const imageUrl of existingImages) data.append('existingImages', imageUrl);
     if (videoFile) data.append('video', videoFile);
@@ -216,6 +325,8 @@ const ProductManagement = () => {
       isComingSoon: false
     });
     setVariants([{ size: '', price: '', originalPrice: '', countInStock: '' }]);
+    setPincodePricingRows([{ pincodes: '', price: '', inventory: '' }]);
+    setPincodeLocationMap({});
     setImages([]);
     setImagePreviews([]);
     setExistingImages([]);
@@ -434,6 +545,45 @@ const ProductManagement = () => {
         ))}
         <button type="button" onClick={addVariant} className="bg-gray-200 text-gray-800 p-2 rounded-md">Add Variant</button>
 
+        <h3 className="text-lg font-semibold">Pincode Price & Inventory</h3>
+        {pincodePricingRows.map((row, index) => (
+          <div key={`pincode-row-${index}`} className="space-y-1">
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                name="pincodes"
+                value={row.pincodes}
+                onChange={(e) => handlePincodeRowChange(index, e)}
+                placeholder="Pincode(s) e.g. 110001,124001"
+                className="w-full p-2 border rounded-md"
+              />
+              <input
+                type="number"
+                name="price"
+                value={row.price}
+                onChange={(e) => handlePincodeRowChange(index, e)}
+                placeholder="Price"
+                className="w-full p-2 border rounded-md"
+              />
+              <input
+                type="number"
+                name="inventory"
+                value={row.inventory}
+                onChange={(e) => handlePincodeRowChange(index, e)}
+                placeholder="Inventory"
+                className="w-full p-2 border rounded-md"
+              />
+              <button type="button" onClick={() => removePincodeRow(index)} className="bg-red-500 text-white p-2 rounded-md">-</button>
+            </div>
+            <p className="text-xs text-gray-600">
+              Location: {extractPincodes(row.pincodes)
+                .map((pincode) => pincodeLocationMap[pincode] ? `${pincode} - ${pincodeLocationMap[pincode]}` : `${pincode} - Fetching...`)
+                .join(', ') || 'N/A'}
+            </p>
+          </div>
+        ))}
+        <button type="button" onClick={addPincodeRow} className="bg-gray-200 text-gray-800 p-2 rounded-md">Add Pincode Rule</button>
+
         {/* Images */}
         <h3 className="text-lg font-semibold">Product Images</h3>
         <input type="file" name="images" multiple onChange={handleImageChange} className="w-full p-2 border rounded-md" />
@@ -481,6 +631,15 @@ const ProductManagement = () => {
                     <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-700 rounded-full text-[10px] uppercase">Sold Out</span>
                   )}
                 </p>
+                <p className="text-sm text-gray-600">
+                  Pincode Rules: {product.pincodePricing && product.pincodePricing.length > 0
+                    ? product.pincodePricing.map((rule, idx) => (
+                      <span key={`pincode-${product._id}-${idx}`} className="mr-2">
+                        {rule.pincode} ({rule.location || 'Location N/A'} - Rs.{rule.price}): Qty {rule.inventory}
+                      </span>
+                    ))
+                    : 'N/A'}
+                </p>
               </div>
             </div>
             <div className="flex space-x-2">
@@ -495,3 +654,4 @@ const ProductManagement = () => {
 };
 
 export default ProductManagement;
+

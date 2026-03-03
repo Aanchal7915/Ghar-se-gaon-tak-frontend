@@ -79,6 +79,7 @@ exports.createProduct = async (req, res) => {
     farmerPhone,
     farmerLocation,
     farmerEmail,
+    pincodePricing,
   } = req.body;
 
   if (!category || !gender) {
@@ -109,6 +110,7 @@ exports.createProduct = async (req, res) => {
       subCategory,
       images: fileUrls,
       variants: JSON.parse(variants),
+      pincodePricing: pincodePricing ? JSON.parse(pincodePricing) : [],
       videoUrl: uploadedVideoUrl,
       farmerName,
       farmerPhone,
@@ -147,6 +149,7 @@ exports.updateProduct = async (req, res) => {
     farmerPhone,
     farmerLocation,
     farmerEmail,
+    pincodePricing,
   } = req.body;
 
   try {
@@ -181,6 +184,7 @@ exports.updateProduct = async (req, res) => {
     product.subCategory = subCategory || product.subCategory;
     product.images = fileUrls;
     product.variants = variants ? JSON.parse(variants) : product.variants;
+    product.pincodePricing = pincodePricing ? JSON.parse(pincodePricing) : product.pincodePricing;
     product.videoUrl = updatedVideoUrl;
     product.farmerName = farmerName !== undefined ? farmerName : product.farmerName;
     product.farmerPhone = farmerPhone !== undefined ? farmerPhone : product.farmerPhone;

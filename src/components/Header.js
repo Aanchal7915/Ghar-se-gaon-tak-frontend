@@ -33,7 +33,7 @@ const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [animateCart, setAnimateCart] = useState(false);
   const [categories, setCategories] = useState([]);
-  const [pincode, setPincode] = useState("");
+  const [pincode, setPincode] = useState(() => localStorage.getItem("selectedPincode") || "");
   const [isDeliverable, setIsDeliverable] = useState(null);
 
   const handlePincodeChange = (e) => {
@@ -41,13 +41,24 @@ const Header = () => {
     if (val.length <= 6) {
       setPincode(val);
       if (val.length === 6) {
-        // Mocking behavior: pincodes starting with 1, 2, or 4 are deliverable
-        setIsDeliverable(val.startsWith("1") || val.startsWith("2") || val.startsWith("4"));
+        localStorage.setItem("selectedPincode", val);
+      } else {
+        localStorage.removeItem("selectedPincode");
+      }
+      window.dispatchEvent(new Event("pincode-updated"));
+      if (val.length === 6) {
+        setIsDeliverable(true);
       } else {
         setIsDeliverable(null);
       }
     }
   };
+
+  useEffect(() => {
+    if (pincode.length === 6) {
+      setIsDeliverable(true);
+    }
+  }, [pincode]);
 
   // Fetch categories for the menu
   useEffect(() => {

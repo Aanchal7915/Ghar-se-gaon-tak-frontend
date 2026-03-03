@@ -4,6 +4,23 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import apiClient from '../services/apiClient';
 import { FaTrash, FaMinus, FaPlus, FaArrowLeft, FaMapMarkerAlt, FaPhone, FaUser } from 'react-icons/fa';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+
+const markerIcon = new L.Icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+});
+
+const RecenterMap = ({ center }) => {
+    const map = useMap();
+    useEffect(() => {
+        map.setView(center);
+    }, [center, map]);
+    return null;
+};
 
 const CartPage = () => {
     const { user, loading } = useAuth();
@@ -12,6 +29,8 @@ const CartPage = () => {
     const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '' });
     const [shippingAddress, setShippingAddress] = useState({ address: '', city: '', postalCode: '' });
     const [customerLocation, setCustomerLocation] = useState({ latitude: null, longitude: null });
+    const [mapCenter, setMapCenter] = useState([28.8955, 76.6066]);
+    const [pinPosition, setPinPosition] = useState([28.8955, 76.6066]);
     const [orderStatus, setOrderStatus] = useState({ isOpen: true, reason: '' });
     const alertShown = useRef(false);
 
@@ -30,10 +49,14 @@ const CartPage = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
                     setCustomerLocation({
-                        latitude: position.coords.latitude,
-                        longitude: position.coords.longitude,
+                        latitude: lat,
+                        longitude: lng,
                     });
+                    setMapCenter([lat, lng]);
+                    setPinPosition([lat, lng]);
                 },
                 (error) => {
                     console.error('Geolocation error:', error);
@@ -316,6 +339,55 @@ const CartPage = () => {
                                             )}
                                         </div>
                                     </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                    <h3 className="text-sm uppercase tracking-wide text-gray-500 font-bold mb-3">Delivery Pin</h3>
+                                    <div className="h-64 w-full rounded-lg overflow-hidden border border-gray-200">
+                                        <MapContainer center={mapCenter} zoom={16} style={{ height: '100%', width: '100%' }}>
+                                            <RecenterMap center={mapCenter} />
+                                            <TileLayer
+                                                attribution='&copy; OpenStreetMap contributors'
+                                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                            />
+                                            <Marker
+                                                position={pinPosition}
+                                                draggable={true}
+                                                icon={markerIcon}
+                                                eventHandlers={{
+                                                    dragend: (event) => {
+                                                        const { lat, lng } = event.target.getLatLng();
+                                                        setPinPosition([lat, lng]);
+                                                        setCustomerLocation({ latitude: lat, longitude: lng });
+                                                    },
+                                                }}
+                                            >
+                                                <Popup>Drag pin to exact delivery location</Popup>
+                                            </Marker>
+                                        </MapContainer>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (!navigator.geolocation) return;
+                                            navigator.geolocation.getCurrentPosition(
+                                                (position) => {
+                                                    const lat = position.coords.latitude;
+                                                    const lng = position.coords.longitude;
+                                                    setMapCenter([lat, lng]);
+                                                    setPinPosition([lat, lng]);
+                                                    setCustomerLocation({ latitude: lat, longitude: lng });
+                                                },
+                                                (error) => console.error('Geolocation error:', error)
+                                            );
+                                        }}
+                                        className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition-colors"
+                                    >
+                                        Use Current Location
+                                    </button>
+                                    <p className="text-xs text-gray-500">
+                                        Lat: {customerLocation.latitude ? customerLocation.latitude.toFixed(6) : 'N/A'} | Lng: {customerLocation.longitude ? customerLocation.longitude.toFixed(6) : 'N/A'}
+                                    </p>
                                 </div>
 
                                 {/* Total and Checkout */}

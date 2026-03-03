@@ -63,6 +63,15 @@ exports.createOrder = async (req, res) => {
   if (!orderItems || orderItems.length === 0) {
     return res.status(400).json({ message: 'No order items' });
   }
+  if (
+    !customerLocation ||
+    typeof customerLocation.latitude !== 'number' ||
+    typeof customerLocation.longitude !== 'number' ||
+    Number.isNaN(customerLocation.latitude) ||
+    Number.isNaN(customerLocation.longitude)
+  ) {
+    return res.status(400).json({ message: 'Please set delivery pin on map.' });
+  }
 
   const session = await mongoose.startSession();
   session.startTransaction();

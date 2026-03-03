@@ -37,6 +37,7 @@ const ProductPage = () => {
   const [isZoomed, setIsZoomed] = useState(false); // desktop hover zoom
   const [isFullScreen, setIsFullScreen] = useState(false); // mobile fullscreen zoom
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [selectedPincode, setSelectedPincode] = useState(() => localStorage.getItem("selectedPincode") || '');
 
   // detect mobile
   const isMobile = window.matchMedia("(pointer: coarse)").matches;
@@ -116,6 +117,18 @@ const ProductPage = () => {
     setIsWishlisted(isInWishlist);
   }, [id, user, wishlist]);
 
+  useEffect(() => {
+    const syncPincode = () => {
+      setSelectedPincode(localStorage.getItem("selectedPincode") || "");
+    };
+    window.addEventListener("pincode-updated", syncPincode);
+    window.addEventListener("storage", syncPincode);
+    return () => {
+      window.removeEventListener("pincode-updated", syncPincode);
+      window.removeEventListener("storage", syncPincode);
+    };
+  }, []);
+
   const handleAddToCart = () => {
     if (!isAuthenticated) {
       alert("Please login to add items to cart.");
@@ -125,7 +138,17 @@ const ProductPage = () => {
       alert("Please select a pack size first.");
       return;
     }
-    if (selectedVariant.countInStock <= 0) {
+    const pincodeRule = selectedPincode
+      ? product?.pincodePricing?.find((entry) => entry.pincode === selectedPincode.trim())
+      : null;
+    const effectiveStock = pincodeRule ? Number(pincodeRule.inventory) : selectedVariant.countInStock;
+    const effectivePrice = pincodeRule ? Number(pincodeRule.price) : selectedVariant.price;
+
+    if (selectedPincode && !pincodeRule) {
+      alert("This product is not available for selected pincode.");
+      return;
+    }
+    if (effectiveStock <= 0) {
       alert("This pack size is out of stock.");
       return;
     }
@@ -133,7 +156,11 @@ const ProductPage = () => {
       _id: product._id,
       name: product.name,
       images: product.images,
-      selectedVariant: selectedVariant,
+      selectedVariant: {
+        ...selectedVariant,
+        price: effectivePrice,
+        countInStock: effectiveStock,
+      },
     };
     addToCart(productToAdd);
     alert(`${product.name} (${selectedVariant.size}) added to cart!`);
@@ -212,6 +239,18 @@ const ProductPage = () => {
       </p>
     ));
 
+  const pincodeRule = selectedPincode
+    ? product?.pincodePricing?.find((entry) => entry.pincode === selectedPincode.trim())
+    : null;
+  const effectivePrice = pincodeRule ? Number(pincodeRule.price) : (selectedVariant ? selectedVariant.price : null);
+  const effectiveStock = pincodeRule ? Number(pincodeRule.inventory) : (selectedVariant ? selectedVariant.countInStock : 0);
+  const isUnavailableForPincode = selectedPincode && !pincodeRule;
+  const availableLocations = [...new Set(
+    (product?.pincodePricing || [])
+      .map((entry) => entry.location)
+      .filter(Boolean)
+  )];
+
   return (
     <div className="container mx-auto px-4 py-2 md:py-4 bg-white">
       {/* Full-screen image modal for mobile zoom */}
@@ -269,7 +308,7 @@ const ProductPage = () => {
             )}
 
             {/* Out of Stock Overlay like Blinkit */}
-            {selectedVariant && selectedVariant.countInStock <= 0 && (
+            {selectedVariant && (effectiveStock <= 0 || isUnavailableForPincode) && (
               <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-20 flex items-center justify-center">
                 <div className="bg-red-600 text-white font-black px-6 py-2 rounded-lg shadow-xl transform -rotate-12 scale-110 border-2 border-white">
                   OUT OF STOCK
@@ -428,7 +467,7 @@ const ProductPage = () => {
           <div className="mt-3 flex flex-col gap-1">
             <div className="flex items-baseline gap-3">
               <span className="text-2xl md:text-3xl font-extrabold text-gray-900">
-                ₹{selectedVariant ? selectedVariant.price : "N/A"}
+                ₹{effectivePrice ?? "N/A"}
               </span>
               {selectedVariant && selectedVariant.originalPrice && (
                 <span className="text-base md:text-xl text-gray-400 font-medium">
@@ -438,8 +477,35 @@ const ProductPage = () => {
             </div>
             {selectedVariant && selectedVariant.originalPrice && (
               <span className="inline-block bg-green-100 text-green-700 text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full w-fit">
-                SAVE ₹{selectedVariant.originalPrice - selectedVariant.price} ({Math.round(((selectedVariant.originalPrice - selectedVariant.price) / selectedVariant.originalPrice) * 100)}% OFF)
+                SAVE ₹{selectedVariant.originalPrice - (effectivePrice ?? selectedVariant.price)} ({Math.round(((selectedVariant.originalPrice - (effectivePrice ?? selectedVariant.price)) / selectedVariant.originalPrice) * 100)}% OFF)
               </span>
+            )}
+          </div>
+
+          <div className="mt-4">
+            <h4 className="font-semibold text-gray-800 mb-2 text-sm md:text-base">Pincode:</h4>
+            <input
+              type="text"
+              value={selectedPincode}
+              onChange={(e) => setSelectedPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder="Enter 6 digit pincode"
+              className="w-full p-2 border rounded-md text-sm"
+            />
+            {selectedPincode.length === 6 && pincodeRule && (
+              <div className="mt-1 text-xs font-semibold">
+                <p className="text-gray-700">Location: {pincodeRule.location || 'Matched Area'}</p>
+                <p className={effectiveStock > 0 ? "text-green-700" : "text-red-600"}>
+                  Availability: {effectiveStock > 0 ? `Available (Qty ${effectiveStock})` : 'Out of stock for this pincode'}
+                </p>
+              </div>
+            )}
+            {isUnavailableForPincode && (
+              <p className="mt-1 text-xs text-red-600 font-semibold">Product not available at this pincode.</p>
+            )}
+            {availableLocations.length > 0 && (
+              <p className="mt-1 text-[11px] text-gray-500">
+                Available Locations: {availableLocations.join(', ')}
+              </p>
             )}
           </div>
 
@@ -499,7 +565,7 @@ const ProductPage = () => {
               >
                 Coming Soon
               </button>
-            ) : selectedVariant && selectedVariant.countInStock > 0 ? (
+            ) : selectedVariant && effectiveStock > 0 && !isUnavailableForPincode ? (
               <button
                 onClick={handleAddToCart}
                 className="w-full bg-green-600 text-white font-bold py-3 md:py-4 rounded-md text-sm md:text-base hover:bg-green-700 transition transform shadow-lg"
@@ -654,3 +720,4 @@ const ProductPage = () => {
 };
 
 export default ProductPage;
+

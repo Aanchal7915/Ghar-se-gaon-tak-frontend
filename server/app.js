@@ -87,7 +87,10 @@ app.use(cookieParser());
 const allowedOrigins = [
   "http://localhost:3000",
   "https://gaon-se-ghar-tak.vercel.app",
-  "https://gaonseghartak.in"
+  "https://gaonseghartak.in",
+  "https://www.gaonseghartak.in",
+  "http://gaonseghartak.in",
+  "http://www.gaonseghartak.in"
 ];
 
 app.use(cors({
