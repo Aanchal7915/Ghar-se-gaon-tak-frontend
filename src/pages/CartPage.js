@@ -31,6 +31,7 @@ const CartPage = () => {
     const [customerLocation, setCustomerLocation] = useState({ latitude: null, longitude: null });
     const [mapCenter, setMapCenter] = useState([28.8955, 76.6066]);
     const [pinPosition, setPinPosition] = useState([28.8955, 76.6066]);
+    const [showMap, setShowMap] = useState(false);
     const [orderStatus, setOrderStatus] = useState({ isOpen: true, reason: '' });
     const alertShown = useRef(false);
 
@@ -74,6 +75,25 @@ const CartPage = () => {
         };
         checkStatus();
     }, [user, loading, navigate]);
+
+    const updateAddressFromLatLng = async (lat, lng) => {
+        try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
+            const data = await response.json();
+            if (data && data.address) {
+                const { road, suburb, city, town, village, postcode, house_number, neighbourhood } = data.address;
+                const street = [house_number, road, neighbourhood, suburb].filter(Boolean).join(', ');
+                const cityName = city || town || village || '';
+                setShippingAddress({
+                    address: street || data.display_name.split(',').slice(0, 2).join(', '),
+                    city: cityName,
+                    postalCode: postcode || ''
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching address:', error);
+        }
+    };
 
     if (loading || !user) return null;
 
@@ -343,48 +363,75 @@ const CartPage = () => {
 
                                 <div className="space-y-3">
                                     <h3 className="text-sm uppercase tracking-wide text-gray-500 font-bold mb-3">Delivery Pin</h3>
-                                    <div className="h-64 w-full rounded-lg overflow-hidden border border-gray-200">
-                                        <MapContainer center={mapCenter} zoom={16} style={{ height: '100%', width: '100%' }}>
-                                            <RecenterMap center={mapCenter} />
-                                            <TileLayer
-                                                attribution='&copy; OpenStreetMap contributors'
-                                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                            />
-                                            <Marker
-                                                position={pinPosition}
-                                                draggable={true}
-                                                icon={markerIcon}
-                                                eventHandlers={{
-                                                    dragend: (event) => {
-                                                        const { lat, lng } = event.target.getLatLng();
-                                                        setPinPosition([lat, lng]);
-                                                        setCustomerLocation({ latitude: lat, longitude: lng });
-                                                    },
-                                                }}
-                                            >
-                                                <Popup>Drag pin to exact delivery location</Popup>
-                                            </Marker>
-                                        </MapContainer>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            if (!navigator.geolocation) return;
-                                            navigator.geolocation.getCurrentPosition(
-                                                (position) => {
-                                                    const lat = position.coords.latitude;
-                                                    const lng = position.coords.longitude;
-                                                    setMapCenter([lat, lng]);
-                                                    setPinPosition([lat, lng]);
-                                                    setCustomerLocation({ latitude: lat, longitude: lng });
-                                                },
-                                                (error) => console.error('Geolocation error:', error)
-                                            );
-                                        }}
-                                        className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition-colors"
-                                    >
-                                        Use Current Location
-                                    </button>
+                                    {!showMap ? (
+                                        <div
+                                            onClick={() => setShowMap(true)}
+                                            className="h-16 w-full rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all group"
+                                        >
+                                            <div className="flex items-center space-x-2 text-gray-600 group-hover:text-green-600">
+                                                <FaMapMarkerAlt className="w-5 h-5" />
+                                                <span className="font-bold">Set using map pin</span>
+                                            </div>
+                                            <p className="text-[10px] text-gray-400 mt-1 italic">Click to open map and pin location</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="h-64 w-full rounded-lg overflow-hidden border border-gray-200">
+                                                <MapContainer center={mapCenter} zoom={16} style={{ height: '100%', width: '100%' }}>
+                                                    <RecenterMap center={mapCenter} />
+                                                    <TileLayer
+                                                        attribution='&copy; OpenStreetMap contributors'
+                                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                    />
+                                                    <Marker
+                                                        position={pinPosition}
+                                                        draggable={true}
+                                                        icon={markerIcon}
+                                                        eventHandlers={{
+                                                            dragend: (event) => {
+                                                                const { lat, lng } = event.target.getLatLng();
+                                                                setPinPosition([lat, lng]);
+                                                                setCustomerLocation({ latitude: lat, longitude: lng });
+                                                                updateAddressFromLatLng(lat, lng);
+                                                            },
+                                                        }}
+                                                    >
+                                                        <Popup>Drag pin to exact delivery location</Popup>
+                                                    </Marker>
+                                                </MapContainer>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        if (!navigator.geolocation) return;
+                                                        navigator.geolocation.getCurrentPosition(
+                                                            (position) => {
+                                                                const lat = position.coords.latitude;
+                                                                const lng = position.coords.longitude;
+                                                                setMapCenter([lat, lng]);
+                                                                setPinPosition([lat, lng]);
+                                                                setCustomerLocation({ latitude: lat, longitude: lng });
+                                                                updateAddressFromLatLng(lat, lng);
+                                                            },
+                                                            (error) => console.error('Geolocation error:', error)
+                                                        );
+                                                    }}
+                                                    className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2"
+                                                >
+                                                    <FaMapMarkerAlt className="text-green-600" />
+                                                    Use Current Location
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowMap(false)}
+                                                    className="text-xs font-bold text-red-500 hover:text-red-700"
+                                                >
+                                                    Hide Map
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
                                     <p className="text-xs text-gray-500">
                                         Lat: {customerLocation.latitude ? customerLocation.latitude.toFixed(6) : 'N/A'} | Lng: {customerLocation.longitude ? customerLocation.longitude.toFixed(6) : 'N/A'}
                                     </p>

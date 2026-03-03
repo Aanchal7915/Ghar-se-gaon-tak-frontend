@@ -124,6 +124,21 @@ const ProductManagement = () => {
     }
   };
 
+  const handleDeleteCategory = async (categoryId) => {
+    if (!window.confirm('Are you sure you want to delete this category? All products in this category might lose their link.')) return;
+    try {
+      const token = localStorage.getItem('token');
+      await apiClient.delete(`/categories/${categoryId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      alert('Category deleted successfully!');
+      setRefreshCategories(prev => !prev);
+    } catch (error) {
+      console.error('Failed to delete category:', error);
+      alert('Failed to delete category.');
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -246,10 +261,10 @@ const ProductManagement = () => {
     setPincodePricingRows(
       product.pincodePricing && product.pincodePricing.length > 0
         ? product.pincodePricing.map((entry) => ({
-            pincodes: entry.pincode || '',
-            price: entry.price ?? '',
-            inventory: entry.inventory ?? '',
-          }))
+          pincodes: entry.pincode || '',
+          price: entry.price ?? '',
+          inventory: entry.inventory ?? '',
+        }))
         : [{ pincodes: '', price: '', inventory: '' }]
     );
     setPincodeLocationMap(
@@ -462,6 +477,28 @@ const ProductManagement = () => {
             </button>
           </div>
         )}
+
+        {/* Manage Existing Categories */}
+        <div className="mt-4 p-4 border rounded-md bg-gray-100">
+          <h3 className="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Existing Categories (Click &times; to delete)</h3>
+          <div className="flex flex-wrap gap-2">
+            {categories.map(cat => (
+              <div key={cat._id} className="flex items-center bg-white border border-gray-300 rounded-full pl-3 pr-1 py-1 shadow-sm hover:border-red-300 transition-all group">
+                <span className="text-xs font-bold text-gray-700 mr-2">{cat.name}</span>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteCategory(cat._id)}
+                  className="bg-gray-100 text-gray-400 hover:bg-red-500 hover:text-white rounded-full p-1 transition-all"
+                  title={`Delete ${cat.name}`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
 
 
         {/* Item Type (Mapped to Gender field) */}

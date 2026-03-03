@@ -37,8 +37,8 @@ const HeroSection = () => {
       try {
         setLoading(true);
         const response = await apiClient.get('/categories');
-        // Show exactly 4 categories on the home page per user instruction
-        setCategories(response.data.slice(0, 4));
+        // Show up to 8 categories on the home page per user instruction
+        setCategories(response.data.slice(0, 8));
       } catch (error) {
         console.error('Failed to fetch categories:', error);
       } finally {
@@ -101,8 +101,8 @@ const HeroSection = () => {
         </motion.div>
 
 
-        {/* Dome Cards Container - Updated for 4 columns on laptop */}
-        <div className="grid grid-cols-4 md:grid-cols-4 gap-2 md:gap-6 w-full max-w-[1400px] px-0 md:px-4 pb-16 min-h-[120px] md:min-h-[200px] items-center justify-center">
+        {/* Dome Cards Container - Updated for 8 columns on laptop and 4 on mobile */}
+        <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 md:gap-4 w-full max-w-[1400px] px-0 md:px-4 pb-16 min-h-[120px] md:min-h-[200px] items-start justify-center">
           {loading ? (
             <div className="col-span-full flex flex-col items-center justify-center py-10">
               <motion.div
@@ -136,8 +136,8 @@ const HeroSection = () => {
 
                   {/* Content Container */}
                   <div className="relative z-10 flex flex-col items-center w-full h-full pt-4 md:pt-8">
-                    {/* Square Image with Glow - Optimized for mobile */}
-                    <div className="w-12 h-12 sm:w-24 sm:h-24 md:w-36 md:h-36 lg:w-48 lg:h-48 rounded-lg overflow-hidden border border-white/80 shadow-[0_0_12px_rgba(255,255,255,0.5)] bg-white/30 p-0.5 transform transition-all duration-500 group-hover:scale-105 group-hover:rotate-1">
+                    {/* Square Image with Glow - Optimized for mobile and multi-column desktop */}
+                    <div className="w-10 h-10 sm:w-16 sm:h-16 md:w-20 md:h-20 lg:w-32 lg:h-32 rounded-lg overflow-hidden border border-white/80 shadow-[0_0_12px_rgba(255,255,255,0.3)] bg-white/30 p-0.5 transform transition-all duration-500 group-hover:scale-105 group-hover:rotate-1">
                       <img
                         src={cat.image}
                         alt={cat.name}
@@ -146,8 +146,8 @@ const HeroSection = () => {
                     </div>
 
                     {/* Glassmorphism Title Bar */}
-                    <div className="mt-auto w-full bg-white/20 backdrop-blur-md border-t border-white/30 py-1.5 md:py-2 group-hover:bg-white/40 transition-colors">
-                      <h3 className="text-[#1e4636] text-[8px] sm:text-[14px] md:text-[16px] font-black text-center px-0.5 uppercase tracking-widest leading-tight">
+                    <div className="mt-auto w-full bg-white/20 backdrop-blur-md border-t border-white/30 py-1 md:py-1.5 group-hover:bg-white/40 transition-colors">
+                      <h3 className="text-[#1e4636] text-[7px] sm:text-[11px] md:text-[13px] font-black text-center px-0.5 uppercase tracking-widest leading-tight">
                         {cat.name}
                       </h3>
                     </div>
