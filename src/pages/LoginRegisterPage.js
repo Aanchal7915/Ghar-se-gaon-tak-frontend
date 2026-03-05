@@ -20,12 +20,14 @@ const LoginRegisterPage = () => {
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [signupMessage, setSignupMessage] = useState("");
   const [signupError, setSignupError] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
 
   // 🔹 Handle Login
   const handleLogin = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const { data } = await apiClient.post("/auth/login", {
         email: loginEmail,
@@ -36,12 +38,15 @@ const LoginRegisterPage = () => {
       navigate("/");
     } catch (err) {
       setLoginError(err.response?.data?.message || "Login failed");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // 🔹 Request OTP
   const handleRequestOtp = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       await apiClient.post("/auth/request-otp", {
         email: signupEmail,
@@ -52,12 +57,15 @@ const LoginRegisterPage = () => {
     } catch (err) {
       setSignupMessage(err.response?.data?.message || "Failed to send OTP.");
       setSignupError(true);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // 🔹 Handle Signup
   const handleSignup = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       await apiClient.post("/auth/verify-otp", {
         email: signupEmail,
@@ -75,6 +83,8 @@ const LoginRegisterPage = () => {
     } catch (err) {
       setSignupMessage(err.response?.data?.message || "Signup failed.");
       setSignupError(true);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -111,8 +121,8 @@ const LoginRegisterPage = () => {
                 <label>Password</label>
               </div>
               <div className="input-box">
-                <button type="submit" className="btn">
-                  Login
+                <button type="submit" className="btn" disabled={isSubmitting}>
+                  {isSubmitting ? "Logging in..." : "Login"}
                 </button>
               </div>
               <div className="regi-link">
@@ -196,8 +206,10 @@ const LoginRegisterPage = () => {
                 </>
               )}
               <div className="input-box">
-                <button type="submit" className="btn">
-                  {isOtpSent ? "Verify & Register" : "Request OTP"}
+                <button type="submit" className="btn" disabled={isSubmitting}>
+                  {isSubmitting
+                    ? (isOtpSent ? "Registering..." : "Sending...")
+                    : (isOtpSent ? "Verify & Register" : "Request OTP")}
                 </button>
               </div>
               <div className="regi-link">
