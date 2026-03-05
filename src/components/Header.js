@@ -17,7 +17,8 @@ import apiClient from "../services/apiClient";
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { cartItems } = useCart(); // Access cartItems from the context
+  const cartContext = useCart();
+  const cartItems = cartContext?.cartItems || [];
 
   const user = (() => {
     try {
@@ -95,6 +96,7 @@ const Header = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    cartContext?.clearCart(); // Clear the cart on logout
     navigate("/login");
   };
 

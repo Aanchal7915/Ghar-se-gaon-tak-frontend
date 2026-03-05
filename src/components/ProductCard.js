@@ -193,13 +193,13 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import apiClient from "../services/apiClient";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { BsArrowRight } from "react-icons/bs";
 import { FaHeart, FaShareAlt, FaStar } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { AiOutlineEye } from "react-icons/ai"; // Import the new icon
+import { AiOutlineEye } from "react-icons/ai";
 
 const ProductCard = ({ product }) => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -210,6 +210,7 @@ const ProductCard = ({ product }) => {
 
   const { user, wishlist, fetchWishlist } = useAuth();
   const { cartItems, addToCart, removeFromCart, updateCartQuantity } = useCart();
+  const navigate = useNavigate();
   const isAuthenticated = Boolean(user || localStorage.getItem("token"));
 
   const defaultVariant = product.variants && product.variants.length > 0 ? product.variants[0] : null;
@@ -227,7 +228,7 @@ const ProductCard = ({ product }) => {
   const handleAdd = (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
-      alert("Please login to add items to cart.");
+      navigate("/login");
       return;
     }
     if (!defaultVariant) return;
@@ -237,7 +238,7 @@ const ProductCard = ({ product }) => {
   const handleIncrement = (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
-      alert("Please login to add items to cart.");
+      navigate("/login");
       return;
     }
     if (!defaultVariant) return;
@@ -252,7 +253,7 @@ const ProductCard = ({ product }) => {
   const handleDecrement = (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
-      alert("Please login to manage cart.");
+      navigate("/login");
       return;
     }
     if (!defaultVariant) return;
@@ -453,12 +454,15 @@ const ProductCard = ({ product }) => {
               null
             ) : isOutOfStock ? (
               <span className="text-[6px] sm:text-[8px] font-black text-red-600 uppercase border border-red-600 px-1 py-0.5 rounded">Out of Stock</span>
-            ) : qty === 0 ? (
+            ) : (!isAuthenticated || qty === 0) ? (
               <button
                 onClick={handleAdd}
-                className="px-1 py-0.5 sm:px-2 sm:py-1 rounded border border-green-600 text-green-700 bg-green-50 hover:bg-green-600 hover:text-white transition-all font-bold text-[6px] sm:text-[9px] shadow-sm uppercase tracking-wider"
+                className={`px-1 py-0.5 sm:px-2 sm:py-1 rounded border transition-all font-bold text-[6px] sm:text-[9px] shadow-sm uppercase tracking-wider ${isAuthenticated
+                    ? "border-green-600 text-green-700 bg-green-50 hover:bg-green-600 hover:text-white"
+                    : "border-blue-600 text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white"
+                  }`}
               >
-                Add
+                {isAuthenticated ? 'Add' : 'Login'}
               </button>
             ) : (
               <div className="flex items-center bg-green-600 text-white rounded shadow-sm overflow-hidden">

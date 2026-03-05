@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import apiClient from '../services/apiClient';
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import {
   FaHeart,
@@ -26,6 +26,7 @@ const ProductPage = () => {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [similarProducts, setSimilarProducts] = useState([]);
   const { addToCart } = useCart();
+  const navigate = useNavigate();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const { user, wishlist, fetchWishlist } = useAuth();
@@ -157,11 +158,11 @@ const ProductPage = () => {
         setSelectedVariant(availableVariants[0]);
       }
     }
-  }, [product, selectedPincode, availableVariants]);
+  }, [product, selectedPincode, availableVariants, selectedVariant]);
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
-      alert("Please login to add items to cart.");
+      navigate("/login");
       return;
     }
     if (!selectedVariant) {
@@ -615,9 +616,12 @@ const ProductPage = () => {
             ) : selectedVariant && effectiveStock > 0 && !isUnavailableForPincode ? (
               <button
                 onClick={handleAddToCart}
-                className="w-full bg-green-600 text-white font-bold py-3 md:py-4 rounded-md text-sm md:text-base hover:bg-green-700 transition transform shadow-lg"
+                className={`w-full font-bold py-3 md:py-4 rounded-md text-sm md:text-base transition transform shadow-lg ${isAuthenticated
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+                  }`}
               >
-                Add to Cart
+                {isAuthenticated ? 'Add to Cart' : 'Login to Buy'}
               </button>
             ) : (
               <button

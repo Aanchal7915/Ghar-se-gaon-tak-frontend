@@ -18,7 +18,7 @@ const groceryData = [
   {
     productName: "Full Cream Milk",
     productPrice: "₹33/500ml",
-    productImage: "/milk (2).jpg",
+    productImage: "/milk.jpg",
   },
   {
     productName: "Medjool Dates",

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import apiClient from '../services/apiClient';
-import { FaLeaf, FaUsers, FaClock, FaShoppingBasket, FaCheckCircle, FaSeedling, FaMapMarkedAlt } from 'react-icons/fa';
+import { FaLeaf, FaUsers, FaClock, FaShoppingBasket, FaCheckCircle, FaSeedling, FaMapMarkedAlt, FaLock } from 'react-icons/fa';
 
 const AppointmentBookingPage = () => {
     const [formData, setFormData] = useState({
@@ -56,14 +57,14 @@ const AppointmentBookingPage = () => {
                             Authentic <span className="text-green-600">Farm-to-Table</span> Journey
                         </h1>
                         <p className="text-xl text-gray-600 leading-relaxed text-justify">
-                            Discover the secrets of 100% organic farming. Our doors are open for those who value purity and health. Whether you're interested in understanding soil health, traditional pest management, or simply want to breathe fresh air, this visit will change your perspective on food forever.
+                            Fresh & Pure farming. Our doors are open for those who value purity and health. Whether you're interested in understanding soil health, traditional pest management, or simply want to breathe fresh air, this visit will change your perspective on food forever.
                         </p>
                     </div>
 
                     <div className="space-y-6">
                         <div className="grid grid-cols-1 gap-4">
                             {[
-                                { title: "Purity at its Source", desc: "Experience 100% chemical-free farming and see how we maintain soil health naturally." },
+                                { title: "Purity at its Source", desc: "Experience chemical-free farming and see how we maintain soil health naturally." },
                                 { title: "Farmer's Insight", desc: "Interact directly with local farmers to learn about traditional agricultural wisdom." },
                                 { title: "Fresh Harvest", desc: "Get the opportunity to hand-pick and purchase current seasonal produce." }
                             ].map((item, index) => (
@@ -103,97 +104,115 @@ const AppointmentBookingPage = () => {
                         </div>
                     )}
 
-                    <form className="space-y-3 lg:space-y-4" onSubmit={handleSubmit}>
-                        <div className="space-y-3 lg:space-y-4">
-                            <div className="group">
-                                <label htmlFor="name" className="block text-[8px] lg:text-xs font-black text-gray-400 uppercase tracking-widest mb-0.5 lg:mb-1.5 group-focus-within:text-green-600 transition-colors">Full Name *</label>
-                                <input
-                                    id="name"
-                                    name="name"
-                                    type="text"
-                                    required
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    className="block w-full px-3 lg:px-5 py-2 lg:py-3.5 bg-gray-50 border border-gray-100 text-gray-900 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all text-xs lg:text-sm font-medium"
-                                    placeholder="Your Full Name"
-                                />
+                    {!localStorage.getItem('user') ? (
+                        <div className="flex flex-col items-center justify-center py-10 space-y-4 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                            <div className="p-4 bg-white rounded-full shadow-sm text-gray-400">
+                                <FaLock className="text-2xl" />
                             </div>
-                            <div className="group">
-                                <label htmlFor="email" className="block text-[8px] lg:text-xs font-black text-gray-400 uppercase tracking-widest mb-0.5 lg:mb-1.5 group-focus-within:text-green-600 transition-colors">Email Address *</label>
-                                <input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    required
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    className="block w-full px-3 lg:px-5 py-2 lg:py-3.5 bg-gray-50 border border-gray-100 text-gray-900 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all text-xs lg:text-sm font-medium"
-                                    placeholder="yourname@gmail.com"
-                                />
+                            <div className="text-center">
+                                <p className="text-sm font-bold text-gray-700">Login into your account for appointments</p>
+                                <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest font-black">Authorized Access Only</p>
                             </div>
-                            <div className="group">
-                                <label htmlFor="phone" className="block text-[8px] lg:text-xs font-black text-gray-400 uppercase tracking-widest mb-0.5 lg:mb-1.5 group-focus-within:text-green-600 transition-colors">Phone Number *</label>
-                                <input
-                                    id="phone"
-                                    name="phone"
-                                    type="tel"
-                                    required
-                                    value={formData.phone}
-                                    onChange={handleChange}
-                                    className="block w-full px-3 lg:px-5 py-2 lg:py-3.5 bg-gray-50 border border-gray-100 text-gray-900 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all text-xs lg:text-sm font-medium"
-                                    placeholder="Mobile Number"
-                                />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3 lg:gap-5">
-                                <div className="group">
-                                    <label htmlFor="preferredDate" className="block text-[8px] lg:text-xs font-black text-gray-400 uppercase tracking-widest mb-0.5 lg:mb-1.5 group-focus-within:text-green-600 transition-colors">Date *</label>
-                                    <input
-                                        id="preferredDate"
-                                        name="preferredDate"
-                                        type="date"
-                                        required
-                                        value={formData.preferredDate}
-                                        onChange={handleChange}
-                                        className="block w-full px-2 lg:px-5 py-2 lg:py-3.5 bg-gray-50 border border-gray-100 text-gray-900 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all text-xs lg:text-sm font-medium"
-                                    />
-                                </div>
-                                <div className="group">
-                                    <label htmlFor="preferredTime" className="block text-[8px] lg:text-xs font-black text-gray-400 uppercase tracking-widest mb-0.5 lg:mb-1.5 group-focus-within:text-green-600 transition-colors">Time *</label>
-                                    <input
-                                        id="preferredTime"
-                                        name="preferredTime"
-                                        type="time"
-                                        required
-                                        value={formData.preferredTime}
-                                        onChange={handleChange}
-                                        className="block w-full px-2 lg:px-5 py-2 lg:py-3.5 bg-gray-50 border border-gray-100 text-gray-900 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all text-xs lg:text-sm font-medium"
-                                    />
-                                </div>
-                            </div>
-                            <div className="group">
-                                <label htmlFor="message" className="block text-[8px] lg:text-xs font-black text-gray-400 uppercase tracking-widest mb-0.5 lg:mb-1.5 group-focus-within:text-green-600 transition-colors">Notes (Optional)</label>
-                                <textarea
-                                    id="message"
-                                    name="message"
-                                    rows="2"
-                                    value={formData.message}
-                                    onChange={handleChange}
-                                    className="block w-full px-3 lg:px-5 py-2 lg:py-3.5 bg-gray-50 border border-gray-100 text-gray-900 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all text-xs lg:text-sm font-medium resize-none shadow-sm"
-                                    placeholder="Brief message..."
-                                ></textarea>
-                            </div>
-                        </div>
-
-                        <div className="pt-2">
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className={`w-full py-3 lg:py-4.5 px-8 border border-transparent text-xs lg:text-sm font-black rounded-xl lg:rounded-2xl text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-offset-2 focus:ring-4 focus:ring-green-500/30 shadow-xl shadow-green-100 transition-all duration-300 active:scale-[0.98] ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            <Link
+                                to="/login"
+                                className="px-8 py-3 bg-green-600 text-white text-xs font-black rounded-xl hover:bg-green-700 transition-all shadow-lg shadow-green-100 uppercase tracking-widest"
                             >
-                                {loading ? 'Securing slot...' : 'Schedule Visit Now'}
-                            </button>
+                                Login Now
+                            </Link>
                         </div>
-                    </form>
+                    ) : (
+                        <form className="space-y-3 lg:space-y-4" onSubmit={handleSubmit}>
+                            <div className="space-y-3 lg:space-y-4">
+                                <div className="group">
+                                    <label htmlFor="name" className="block text-[8px] lg:text-xs font-black text-gray-400 uppercase tracking-widest mb-0.5 lg:mb-1.5 group-focus-within:text-green-600 transition-colors">Full Name *</label>
+                                    <input
+                                        id="name"
+                                        name="name"
+                                        type="text"
+                                        required
+                                        value={formData.name}
+                                        onChange={handleChange}
+                                        className="block w-full px-3 lg:px-5 py-2 lg:py-3.5 bg-gray-50 border border-gray-100 text-gray-900 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all text-xs lg:text-sm font-medium"
+                                        placeholder="Your Full Name"
+                                    />
+                                </div>
+                                <div className="group">
+                                    <label htmlFor="email" className="block text-[8px] lg:text-xs font-black text-gray-400 uppercase tracking-widest mb-0.5 lg:mb-1.5 group-focus-within:text-green-600 transition-colors">Email Address *</label>
+                                    <input
+                                        id="email"
+                                        name="email"
+                                        type="email"
+                                        required
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        className="block w-full px-3 lg:px-5 py-2 lg:py-3.5 bg-gray-50 border border-gray-100 text-gray-900 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all text-xs lg:text-sm font-medium"
+                                        placeholder="yourname@gmail.com"
+                                    />
+                                </div>
+                                <div className="group">
+                                    <label htmlFor="phone" className="block text-[8px] lg:text-xs font-black text-gray-400 uppercase tracking-widest mb-0.5 lg:mb-1.5 group-focus-within:text-green-600 transition-colors">Phone Number *</label>
+                                    <input
+                                        id="phone"
+                                        name="phone"
+                                        type="tel"
+                                        required
+                                        value={formData.phone}
+                                        onChange={handleChange}
+                                        className="block w-full px-3 lg:px-5 py-2 lg:py-3.5 bg-gray-50 border border-gray-100 text-gray-900 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all text-xs lg:text-sm font-medium"
+                                        placeholder="Mobile Number"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-3 lg:gap-5">
+                                    <div className="group">
+                                        <label htmlFor="preferredDate" className="block text-[8px] lg:text-xs font-black text-gray-400 uppercase tracking-widest mb-0.5 lg:mb-1.5 group-focus-within:text-green-600 transition-colors">Date *</label>
+                                        <input
+                                            id="preferredDate"
+                                            name="preferredDate"
+                                            type="date"
+                                            required
+                                            value={formData.preferredDate}
+                                            onChange={handleChange}
+                                            className="block w-full px-2 lg:px-5 py-2 lg:py-3.5 bg-gray-50 border border-gray-100 text-gray-900 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all text-xs lg:text-sm font-medium"
+                                        />
+                                    </div>
+                                    <div className="group">
+                                        <label htmlFor="preferredTime" className="block text-[8px] lg:text-xs font-black text-gray-400 uppercase tracking-widest mb-0.5 lg:mb-1.5 group-focus-within:text-green-600 transition-colors">Time *</label>
+                                        <input
+                                            id="preferredTime"
+                                            name="preferredTime"
+                                            type="time"
+                                            required
+                                            value={formData.preferredTime}
+                                            onChange={handleChange}
+                                            className="block w-full px-2 lg:px-5 py-2 lg:py-3.5 bg-gray-50 border border-gray-100 text-gray-900 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all text-xs lg:text-sm font-medium"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="group">
+                                    <label htmlFor="message" className="block text-[8px] lg:text-xs font-black text-gray-400 uppercase tracking-widest mb-0.5 lg:mb-1.5 group-focus-within:text-green-600 transition-colors">Notes (Optional)</label>
+                                    <textarea
+                                        id="message"
+                                        name="message"
+                                        rows="2"
+                                        value={formData.message}
+                                        onChange={handleChange}
+                                        className="block w-full px-3 lg:px-5 py-2 lg:py-3.5 bg-gray-50 border border-gray-100 text-gray-900 rounded-xl focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all text-xs lg:text-sm font-medium resize-none shadow-sm"
+                                        placeholder="Brief message..."
+                                    ></textarea>
+                                </div>
+                            </div>
+
+                            <div className="pt-2">
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className={`w-full py-3 lg:py-4.5 px-8 border border-transparent text-xs lg:text-sm font-black rounded-xl lg:rounded-2xl text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-offset-2 focus:ring-4 focus:ring-green-500/30 shadow-xl shadow-green-100 transition-all duration-300 active:scale-[0.98] ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                >
+                                    {loading ? 'Securing slot...' : 'Schedule Visit Now'}
+                                </button>
+                            </div>
+                        </form>
+                    )}
                 </div>
             </div>
         </div>

@@ -16,8 +16,8 @@ const Footer = () => {
               Your trusted online grocery store. We bring fresh vegetables, fruits, and daily essentials directly from the farm to your kitchen with love and care.
             </p>
             <div className="text-xs md:text-sm pt-2">
-              <p>Dk saharan Marodhi JATAN 103, Rohtak</p>
-              <p>Mob: <a href="tel:+917293333340" className="hover:text-white transition-colors">7293333340</a></p>
+              <p>Address: Dk saharan Marodhi JATAN 103, Rohtak, 124021</p>
+              <p>Phone Number: <a href="tel:+917293333340" className="hover:text-white transition-colors">7293333340</a></p>
             </div>
             <div className="flex space-x-4 mt-4">
               <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
