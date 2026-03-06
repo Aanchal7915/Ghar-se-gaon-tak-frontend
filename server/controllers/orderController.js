@@ -39,9 +39,10 @@ exports.createOrder = async (req, res) => {
   // Check Order Timing: 12:00 PM to 6:00 PM (18:00)
   const currentTime = moment();
   const currentHour = currentTime.hour();
-  if (currentHour < 12 || currentHour >= 18) {
-    return res.status(403).json({ message: 'Orders are only accepted between 12:00 PM and 6:00 PM.' });
-  }
+  // Temporarily disabling the status check for testing (User request)
+  // if (currentHour < 12 || currentHour >= 18) {
+  //   return res.status(403).json({ message: 'Orders are only accepted between 12:00 PM and 6:00 PM.' });
+  // }
 
   // Check Daily Order Limit
   const settings = await SystemSettings.findOne() || { dailyOrderLimit: 50 };

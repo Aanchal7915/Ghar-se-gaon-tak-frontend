@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import apiClient from '../services/apiClient';
 import { FaTrash, FaMinus, FaPlus, FaArrowLeft, FaMapMarkerAlt, FaPhone, FaUser } from 'react-icons/fa';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 
 const markerIcon = new L.Icon({
@@ -32,6 +32,7 @@ const CartPage = () => {
     const [mapCenter, setMapCenter] = useState([28.8955, 76.6066]);
     const [pinPosition, setPinPosition] = useState([28.8955, 76.6066]);
     const [showMap, setShowMap] = useState(false);
+    const [modalAddressText, setModalAddressText] = useState("");
     const [orderStatus, setOrderStatus] = useState({ isOpen: true, reason: '' });
     const alertShown = useRef(false);
 
@@ -68,7 +69,9 @@ const CartPage = () => {
         const checkStatus = async () => {
             try {
                 const { data } = await apiClient.get('/orders/status');
-                setOrderStatus(data);
+                // Temporarily disabling the status check for testing (User request)
+                // setOrderStatus(data); 
+                setOrderStatus({ isOpen: true, reason: '' });
             } catch (error) {
                 console.error('Failed to check order status:', error);
             }
@@ -84,6 +87,9 @@ const CartPage = () => {
                 const { road, suburb, city, town, village, postcode, house_number, neighbourhood } = data.address;
                 const street = [house_number, road, neighbourhood, suburb].filter(Boolean).join(', ');
                 const cityName = city || town || village || '';
+
+                setModalAddressText(data.display_name);
+
                 setShippingAddress({
                     address: street || data.display_name.split(',').slice(0, 2).join(', '),
                     city: cityName,
@@ -93,6 +99,18 @@ const CartPage = () => {
         } catch (error) {
             console.error('Error fetching address:', error);
         }
+    };
+
+    const MapClickHandler = () => {
+        useMapEvents({
+            click: (e) => {
+                const { lat, lng } = e.latlng;
+                setPinPosition([lat, lng]);
+                setCustomerLocation({ latitude: lat, longitude: lng });
+                updateAddressFromLatLng(lat, lng);
+            }
+        });
+        return null;
     };
 
     if (loading || !user) return null;
@@ -363,22 +381,40 @@ const CartPage = () => {
 
                                 <div className="space-y-3">
                                     <h3 className="text-sm uppercase tracking-wide text-gray-500 font-bold mb-3">Delivery Pin</h3>
-                                    {!showMap ? (
-                                        <div
-                                            onClick={() => setShowMap(true)}
-                                            className="h-16 w-full rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-green-500 hover:bg-green-50 transition-all group"
-                                        >
-                                            <div className="flex items-center space-x-2 text-gray-600 group-hover:text-green-600">
-                                                <FaMapMarkerAlt className="w-5 h-5" />
-                                                <span className="font-bold">Set using map pin</span>
-                                            </div>
-                                            <p className="text-[10px] text-gray-400 mt-1 italic">Click to open map and pin location</p>
+                                    <div
+                                        onClick={() => setShowMap(true)}
+                                        className="h-16 w-full rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all group p-2 text-center"
+                                    >
+                                        <div className="flex items-center space-x-2 text-gray-600 group-hover:text-blue-600">
+                                            <FaMapMarkerAlt className="w-5 h-5" />
+                                            <span className="font-bold">Set using map pin</span>
                                         </div>
-                                    ) : (
-                                        <>
-                                            <div className="h-64 w-full rounded-lg overflow-hidden border border-gray-200">
+                                        <p className="text-[10px] text-gray-400 mt-1 italic">Click to open map and pin location</p>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Lat: {customerLocation.latitude ? customerLocation.latitude.toFixed(6) : 'N/A'} | Lng: {customerLocation.longitude ? customerLocation.longitude.toFixed(6) : 'N/A'}
+                                    </p>
+                                </div>
+
+                                {showMap && (
+                                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                                        <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col relative transition-all transform scale-100">
+                                            {/* Header */}
+                                            <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-white">
+                                                <div>
+                                                    <h3 className="text-xl font-bold text-gray-900">Select Location</h3>
+                                                    <p className="text-xs text-gray-500 mt-1">Please pin your service address</p>
+                                                </div>
+                                                <button type="button" onClick={() => setShowMap(false)} className="text-gray-400 hover:bg-gray-100 rounded-full transition-colors p-2">
+                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                                </button>
+                                            </div>
+
+                                            {/* Map Area */}
+                                            <div className="h-72 sm:h-80 w-full relative">
                                                 <MapContainer center={mapCenter} zoom={16} style={{ height: '100%', width: '100%' }}>
                                                     <RecenterMap center={mapCenter} />
+                                                    <MapClickHandler />
                                                     <TileLayer
                                                         attribution='&copy; OpenStreetMap contributors'
                                                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -399,8 +435,6 @@ const CartPage = () => {
                                                         <Popup>Drag pin to exact delivery location</Popup>
                                                     </Marker>
                                                 </MapContainer>
-                                            </div>
-                                            <div className="flex items-center justify-between">
                                                 <button
                                                     type="button"
                                                     onClick={() => {
@@ -417,25 +451,27 @@ const CartPage = () => {
                                                             (error) => console.error('Geolocation error:', error)
                                                         );
                                                     }}
-                                                    className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2"
+                                                    className="absolute bottom-4 right-4 z-[400] bg-white text-blue-600 px-4 py-2.5 rounded-full shadow-lg font-bold text-sm flex items-center gap-2 hover:bg-blue-50 transition-colors border border-blue-100"
                                                 >
-                                                    <FaMapMarkerAlt className="text-green-600" />
-                                                    Use Current Location
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowMap(false)}
-                                                    className="text-xs font-bold text-red-500 hover:text-red-700"
-                                                >
-                                                    Hide Map
+                                                    <FaMapMarkerAlt /> Locate Me
                                                 </button>
                                             </div>
-                                        </>
-                                    )}
-                                    <p className="text-xs text-gray-500">
-                                        Lat: {customerLocation.latitude ? customerLocation.latitude.toFixed(6) : 'N/A'} | Lng: {customerLocation.longitude ? customerLocation.longitude.toFixed(6) : 'N/A'}
-                                    </p>
-                                </div>
+
+                                            {/* Footer Area */}
+                                            <div className="p-5 bg-white flex flex-col gap-4">
+                                                <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl">
+                                                    <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1.5">FINAL ADDRESS:</p>
+                                                    <p className="text-sm text-gray-700 leading-snug line-clamp-2 min-h-[40px] italic">
+                                                        {modalAddressText || "Click anywhere on the map above to select your location..."}
+                                                    </p>
+                                                </div>
+                                                <button type="button" onClick={() => setShowMap(false)} className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/30 text-[15px]">
+                                                    Confirm This Location
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Total and Checkout */}
                                 <div className="border-t border-gray-100 pt-6 mt-6">
