@@ -1,5 +1,5 @@
-
 // src/controllers/orderController.js
+require('dotenv').config();
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Razorpay = require('razorpay');
@@ -7,11 +7,7 @@ const crypto = require('crypto');
 const moment = require('moment');
 const mongoose = require('mongoose');
 const SystemSettings = require('../models/SystemSettings'); // IMPORT SystemSettings
-
-const razorpayInstance = process.env.RAZORPAY_KEY_ID ? new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-}) : null;
+const razorpayInstance = require('../config/razorpay');
 
 exports.getOrderStatus = async (req, res) => {
   const currentTime = moment();
@@ -253,9 +249,9 @@ exports.createRazorpayOrder = async (req, res) => {
       }
       const razorpayOrder = await razorpayInstance.orders.create(options);
 
-      // Crucially, send the key_id back to the frontend
+      // Crucially, send the key_id back to the frontend (always use the trimmed env var)
       const responseData = {
-        key_id: process.env.RAZORPAY_KEY_ID, // Add this line
+        key_id: process.env.RAZORPAY_KEY_ID?.trim(),
         amount: razorpayOrder.amount,
         currency: razorpayOrder.currency,
         id: razorpayOrder.id,
