@@ -40,6 +40,7 @@ const CartPage = () => {
         if (loading) return;
 
         const token = localStorage.getItem('token');
+        console.log(token);
         if (!user && !token) {
             if (!alertShown.current) {
                 alert("Please login to access your shopping cart.");

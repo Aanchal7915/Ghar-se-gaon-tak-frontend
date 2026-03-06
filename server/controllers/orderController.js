@@ -8,10 +8,10 @@ const moment = require('moment');
 const mongoose = require('mongoose');
 const SystemSettings = require('../models/SystemSettings'); // IMPORT SystemSettings
 
-const razorpayInstance = new Razorpay({
+const razorpayInstance = process.env.RAZORPAY_KEY_ID ? new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+}) : null;
 
 exports.getOrderStatus = async (req, res) => {
   const currentTime = moment();
@@ -248,6 +248,9 @@ exports.createRazorpayOrder = async (req, res) => {
       receipt: order._id.toString()
     };
     try {
+      if (!razorpayInstance) {
+        throw new Error('Razorpay is not configured. Please check RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.');
+      }
       const razorpayOrder = await razorpayInstance.orders.create(options);
 
       // Crucially, send the key_id back to the frontend
@@ -261,7 +264,8 @@ exports.createRazorpayOrder = async (req, res) => {
       res.status(201).json(responseData);
     } catch (error) {
       console.error('Razorpay Error:', error);
-      res.status(500).json({ message: `Razorpay order creation failed: ${error.message}` });
+      const detail = error.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
+      res.status(500).json({ message: `Razorpay order creation failed: ${detail}` });
     }
   } else {
     res.status(404).json({ message: 'Order not found' });
@@ -302,7 +306,8 @@ exports.verifyPayment = async (req, res) => {
 // @access  Private
 exports.getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user._id }).populate('orderItems.product', 'name images').sort({ createdAt: -1 });
+    // Only show paid orders in My Orders as per user request
+    const orders = await Order.find({ user: req.user._id, isPaid: true }).populate('orderItems.product', 'name images').sort({ createdAt: -1 });
     res.json(orders);
   } catch (error) {
     console.error(error);
