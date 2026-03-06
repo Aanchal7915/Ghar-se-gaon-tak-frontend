@@ -29,7 +29,7 @@ const ProductPage = () => {
   const navigate = useNavigate();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
-  const { user, wishlist, fetchWishlist } = useAuth();
+  const { user, wishlist, fetchWishlist, loading: authLoading } = useAuth();
   const isAuthenticated = Boolean(user || localStorage.getItem("token"));
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [heartAnimation, setHeartAnimation] = useState(false);
@@ -618,7 +618,7 @@ const ProductPage = () => {
                 onClick={handleAddToCart}
                 className={`w-full font-bold py-3 md:py-4 rounded-md text-sm md:text-base transition transform shadow-lg ${isAuthenticated
                   ? "bg-green-600 text-white hover:bg-green-700"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-blue-600 text-white hover:bg-blue-700 hover:scale-[1.02]"
                   }`}
               >
                 {isAuthenticated ? 'Add to Cart' : 'Login to Buy'}

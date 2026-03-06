@@ -208,7 +208,7 @@ const ProductCard = ({ product }) => {
   const cardRef = useRef(null);
   const intervalRef = useRef(null);
 
-  const { user, wishlist, fetchWishlist } = useAuth();
+  const { user, wishlist, fetchWishlist, loading: authLoading } = useAuth();
   const { cartItems, addToCart, removeFromCart, updateCartQuantity } = useCart();
   const navigate = useNavigate();
   const isAuthenticated = Boolean(user || localStorage.getItem("token"));
@@ -458,8 +458,8 @@ const ProductCard = ({ product }) => {
               <button
                 onClick={handleAdd}
                 className={`px-1 py-0.5 sm:px-2 sm:py-1 rounded border transition-all font-bold text-[6px] sm:text-[9px] shadow-sm uppercase tracking-wider ${isAuthenticated
-                    ? "border-green-600 text-green-700 bg-green-50 hover:bg-green-600 hover:text-white"
-                    : "border-blue-600 text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white"
+                  ? "border-green-600 text-green-700 bg-green-50 hover:bg-green-600 hover:text-white"
+                  : "border-blue-600 text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white"
                   }`}
               >
                 {isAuthenticated ? 'Add' : 'Login'}
