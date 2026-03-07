@@ -129,7 +129,27 @@ exports.createOrder = async (req, res) => {
 
     const createdOrder = await order.save();
 
-    res.status(201).json(createdOrder);
+    let razorpayOrder = null;
+    try {
+      if (razorpayInstance) {
+        const options = {
+          amount: Math.round(createdOrder.totalPrice * 100),
+          currency: "INR",
+          receipt: createdOrder._id.toString()
+        };
+        const rzpOrder = await razorpayInstance.orders.create(options);
+        razorpayOrder = {
+          key_id: process.env.RAZORPAY_KEY_ID?.trim(),
+          amount: rzpOrder.amount,
+          currency: rzpOrder.currency,
+          id: rzpOrder.id,
+        };
+      }
+    } catch (rzpErr) {
+      console.error('Initial Razorpay prep failed:', rzpErr);
+    }
+
+    res.status(201).json({ createdOrder, razorpayOrder });
   } catch (error) {
     console.error('Order creation failed:', error.message);
     res.status(500).json({ message: error.message || 'Server Error' });

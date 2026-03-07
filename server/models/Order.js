@@ -18,7 +18,7 @@ const orderSchema = new mongoose.Schema({
     },
     customerLocation: {
         latitude: { type: Number, },
-        longitude: { type: Number,}
+        longitude: { type: Number, }
     },
     customerInfo: {
         name: { type: String, required: true },
@@ -26,7 +26,7 @@ const orderSchema = new mongoose.Schema({
     },
     status: { type: String, enum: ['pending', 'out for delivery', 'delivered', 'cancelled'], default: 'pending' },
     paymentMethod: { type: String, required: true, default: 'Razorpay' },
-    paymentResult: { 
+    paymentResult: {
         id: { type: String },
         status: { type: String },
         update_time: { type: String }
@@ -38,7 +38,7 @@ const orderSchema = new mongoose.Schema({
     isCancelled: { type: Boolean, required: true, default: false }, // New 
     // field
     isReplaced: { type: Boolean, default: false }, // New field
-    isReturned: { type: Boolean, default: false } ,// New field for clarity
+    isReturned: { type: Boolean, default: false },// New field for clarity
     deliveredAt: { type: Date },
     expectedDeliveryDate: { type: Date },
     deliveryWindowStart: { type: Date },

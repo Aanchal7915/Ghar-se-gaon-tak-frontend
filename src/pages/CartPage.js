@@ -17,7 +17,10 @@ const markerIcon = new L.Icon({
 const RecenterMap = ({ center }) => {
     const map = useMap();
     useEffect(() => {
-        map.setView(center);
+        if (center && center[0] !== null) {
+            map.invalidateSize();
+            map.flyTo(center, 16); // Standard street zoom level
+        }
     }, [center, map]);
     return null;
 };
@@ -36,6 +39,8 @@ const CartPage = () => {
     const [mapCenter, setMapCenter] = useState([28.8955, 76.6066]);
     const [pinPosition, setPinPosition] = useState([28.8955, 76.6066]);
     const [showMap, setShowMap] = useState(false);
+    const [showErrors, setShowErrors] = useState(false);
+    const [checkoutLoading, setCheckoutLoading] = useState(false);
     const [modalAddressText, setModalAddressText] = useState("");
     const [orderStatus, setOrderStatus] = useState({ isOpen: true, reason: '' });
     const alertShown = useRef(false);
@@ -85,6 +90,13 @@ const CartPage = () => {
         checkStatus();
     }, [user, loading, navigate]);
 
+    // Initial address fetch when map modal opens
+    useEffect(() => {
+        if (showMap && pinPosition[0] && pinPosition[1]) {
+            updateAddressFromLatLng(pinPosition[0], pinPosition[1]);
+        }
+    }, [showMap]);
+
     const updateAddressFromLatLng = async (lat, lng) => {
         try {
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
@@ -133,8 +145,17 @@ const CartPage = () => {
 
     const handleCheckout = async (e) => {
         e.preventDefault();
+        setShowErrors(true);
 
-        const pCode = shippingAddress.postalCode.trim();
+        const { name, phone } = customerInfo;
+        const { address, city, postalCode } = shippingAddress;
+
+        if (!name.trim() || !phone.trim() || !address.trim() || !city.trim() || !postalCode.trim()) {
+            alert('Please fill in all required shipping details.');
+            return;
+        }
+
+        const pCode = postalCode.trim();
         if (!/^\d{6}$/.test(pCode)) {
             alert('Please enter a valid 6-digit pincode.');
             return;
@@ -158,6 +179,7 @@ const CartPage = () => {
         }
 
         try {
+            setCheckoutLoading(true);
             const orderData = {
                 orderItems: cartItems.map(item => ({
                     name: item.name,
@@ -180,10 +202,7 @@ const CartPage = () => {
             };
 
             const orderResponse = await apiClient.post('/orders', orderData, config);
-            const createdOrder = orderResponse.data;
-
-            const razorpayResponse = await apiClient.post(`/orders/${createdOrder._id}/razorpay`, {}, config);
-            const razorpayOrder = razorpayResponse.data;
+            const { createdOrder, razorpayOrder } = orderResponse.data;
 
             const options = {
                 key: razorpayOrder.key_id,
@@ -202,11 +221,16 @@ const CartPage = () => {
                     clearCart();
                     navigate('/myorders');
                 },
+                modal: {
+                    ondismiss: function () {
+                        setCheckoutLoading(false);
+                    }
+                },
                 prefill: {
                     email: user.email,
                 },
                 theme: {
-                    color: "#16a34a", // Green color for Razorpay modal matching the button
+                    color: "#16a34a",
                 },
             };
             const rzp1 = new window.Razorpay(options);
@@ -216,6 +240,7 @@ const CartPage = () => {
             const errorMessage = error.response?.data?.message || error.message;
             console.error('Checkout failed:', errorMessage);
             alert(`Checkout failed: ${errorMessage}`);
+            setCheckoutLoading(false);
         }
     };
 
@@ -337,9 +362,11 @@ const CartPage = () => {
                                             value={customerInfo.name}
                                             onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
                                             placeholder="Full Name"
-                                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
+                                            autoComplete="name"
+                                            className={`w-full pl-10 pr-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none ${showErrors && !customerInfo.name.trim() ? 'border-red-500 ring-1 ring-red-200' : 'border-gray-200'}`}
                                             required
                                         />
+                                        {showErrors && !customerInfo.name.trim() && <p className="text-[10px] text-red-500 mt-1 font-bold">Name is required</p>}
                                     </div>
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -350,9 +377,11 @@ const CartPage = () => {
                                             value={customerInfo.phone}
                                             onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
                                             placeholder="Phone Number"
-                                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
+                                            autoComplete="tel"
+                                            className={`w-full pl-10 pr-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none ${showErrors && !customerInfo.phone.trim() ? 'border-red-500 ring-1 ring-red-200' : 'border-gray-200'}`}
                                             required
                                         />
+                                        {showErrors && !customerInfo.phone.trim() && <p className="text-[10px] text-red-500 mt-1 font-bold">Phone number is required</p>}
                                     </div>
                                 </div>
 
@@ -368,31 +397,39 @@ const CartPage = () => {
                                             value={shippingAddress.address}
                                             onChange={(e) => setShippingAddress({ ...shippingAddress, address: e.target.value })}
                                             placeholder="Street Address"
-                                            className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
+                                            className={`w-full pl-10 pr-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none ${showErrors && !shippingAddress.address.trim() ? 'border-red-500 ring-1 ring-red-200' : 'border-gray-200'}`}
                                             required
                                         />
+                                        {showErrors && !shippingAddress.address.trim() && <p className="text-[10px] text-red-500 mt-1 font-bold">Street address is required</p>}
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <input
-                                            type="text"
-                                            value={shippingAddress.city}
-                                            onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
-                                            placeholder="City"
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none"
-                                            required
-                                        />
+                                        <div className="flex flex-col">
+                                            <input
+                                                type="text"
+                                                value={shippingAddress.city}
+                                                onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
+                                                placeholder="City"
+                                                className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none ${showErrors && !shippingAddress.city.trim() ? 'border-red-500 ring-1 ring-red-200' : 'border-gray-200'}`}
+                                                required
+                                            />
+                                            {showErrors && !shippingAddress.city.trim() && <p className="text-[10px] text-red-500 mt-1 font-bold">City is required</p>}
+                                        </div>
                                         <div className="flex flex-col">
                                             <input
                                                 type="text"
                                                 value={shippingAddress.postalCode}
                                                 onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
                                                 placeholder="Postal Code"
-                                                className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none ${shippingAddress.postalCode && (!/^\d{6}$/.test(shippingAddress.postalCode.trim()) || !isDeliverableAtPincode(shippingAddress.postalCode))
-                                                    ? 'border-red-500'
-                                                    : 'border-gray-200'
+                                                className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none 
+                                                    ${(showErrors && !shippingAddress.postalCode.trim()) || (shippingAddress.postalCode && (!/^\d{6}$/.test(shippingAddress.postalCode.trim()) || !isDeliverableAtPincode(shippingAddress.postalCode)))
+                                                        ? 'border-red-500 ring-1 ring-red-200'
+                                                        : 'border-gray-200'
                                                     }`}
                                                 required
                                             />
+                                            {showErrors && !shippingAddress.postalCode.trim() && (
+                                                <p className="text-[10px] text-red-500 mt-1 font-bold">Pincode is required</p>
+                                            )}
                                             {shippingAddress.postalCode && !/^\d{6}$/.test(shippingAddress.postalCode.trim()) && (
                                                 <p className="text-[10px] text-red-500 mt-1 font-bold italic">Please enter a valid 6-digit pincode</p>
                                             )}
@@ -467,17 +504,29 @@ const CartPage = () => {
                                                 <button
                                                     type="button"
                                                     onClick={() => {
-                                                        if (!navigator.geolocation) return;
+                                                        if (!navigator.geolocation) {
+                                                            alert("Geolocation is not supported by your browser.");
+                                                            return;
+                                                        }
                                                         navigator.geolocation.getCurrentPosition(
                                                             (position) => {
                                                                 const lat = position.coords.latitude;
                                                                 const lng = position.coords.longitude;
+                                                                // Use specific coordinates to ensure state changes
                                                                 setMapCenter([lat, lng]);
                                                                 setPinPosition([lat, lng]);
                                                                 setCustomerLocation({ latitude: lat, longitude: lng });
                                                                 updateAddressFromLatLng(lat, lng);
                                                             },
-                                                            (error) => console.error('Geolocation error:', error)
+                                                            (error) => {
+                                                                console.error('Geolocation error:', error);
+                                                                if (error.code === 1) {
+                                                                    alert("Location access denied. Please enable location permissions in your browser.");
+                                                                } else {
+                                                                    alert("Failed to detect location. Please try dragging the pin manually.");
+                                                                }
+                                                            },
+                                                            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
                                                         );
                                                     }}
                                                     className="absolute bottom-4 right-4 z-[400] bg-white text-blue-600 px-4 py-2.5 rounded-full shadow-lg font-bold text-sm flex items-center gap-2 hover:bg-blue-50 transition-colors border border-blue-100"
@@ -510,13 +559,23 @@ const CartPage = () => {
                                     </div>
                                     <button
                                         type="submit"
-                                        disabled={!orderStatus.isOpen}
-                                        className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 ${orderStatus.isOpen
+                                        disabled={!orderStatus.isOpen || checkoutLoading}
+                                        className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center gap-2 ${orderStatus.isOpen && !checkoutLoading
                                             ? 'bg-green-600 text-white hover:bg-green-700 hover:shadow-green-500/30'
                                             : 'bg-gray-400 text-gray-200 cursor-not-allowed'
                                             }`}
                                     >
-                                        {orderStatus.isOpen ? 'Proceed to Checkout' : orderStatus.reason}
+                                        {checkoutLoading ? (
+                                            <>
+                                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                                <span>Processing...</span>
+                                            </>
+                                        ) : (
+                                            orderStatus.isOpen ? 'Proceed to Checkout' : orderStatus.reason
+                                        )}
                                     </button>
                                     <p className="text-center text-xs text-gray-400 mt-4">
                                         Secure Payment via Razorpay

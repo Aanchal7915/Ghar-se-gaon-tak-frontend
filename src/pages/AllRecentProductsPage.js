@@ -123,8 +123,11 @@ const AllRecentProductsPage = () => {
     const fetchAllRecentProducts = async () => {
       try {
         setLoading(true);
+        const pincode = localStorage.getItem("selectedPincode");
         // Fetch only the 20 most recent products
-        const { data } = await apiClient.get("/products/recent?limit=20");
+        const { data } = await apiClient.get("/products/recent", {
+          params: { limit: 20, pincode }
+        });
         setProducts(data);
       } catch (err) {
         setError(err.message);
@@ -135,6 +138,12 @@ const AllRecentProductsPage = () => {
       }
     };
     fetchAllRecentProducts();
+
+    const handlePincodeUpdate = () => {
+      fetchAllRecentProducts();
+    };
+    window.addEventListener("pincode-updated", handlePincodeUpdate);
+    return () => window.removeEventListener("pincode-updated", handlePincodeUpdate);
   }, []);
 
 
@@ -263,7 +272,7 @@ const AllRecentProductsPage = () => {
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-gray-800 mb-6">New Arrivals</h1>
             {filteredProducts.length === 0 ? (
-              <p className="text-center text-lg text-gray-600">No products found.</p>
+              <p className="text-center text-sm md:text-lg text-gray-600">Not available product at this location.</p>
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                 {filteredProducts.map((product) => (

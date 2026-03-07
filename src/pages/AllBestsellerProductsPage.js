@@ -26,7 +26,10 @@ const AllBestsellerProductsPage = () => {
         const fetchBestsellerProducts = async () => {
             try {
                 setLoading(true);
-                const response = await apiClient.get('/products/bestseller');
+                const pincode = localStorage.getItem("selectedPincode");
+                const response = await apiClient.get('/products/bestseller', {
+                    params: { pincode }
+                });
                 setProducts(response.data);
             } catch (err) {
                 setError(err.message);
@@ -37,6 +40,12 @@ const AllBestsellerProductsPage = () => {
             }
         };
         fetchBestsellerProducts();
+
+        const handlePincodeUpdate = () => {
+            fetchBestsellerProducts();
+        };
+        window.addEventListener("pincode-updated", handlePincodeUpdate);
+        return () => window.removeEventListener("pincode-updated", handlePincodeUpdate);
     }, []);
 
 
@@ -156,8 +165,8 @@ const AllBestsellerProductsPage = () => {
                     </h1>
 
                     {filteredProducts.length === 0 ? (
-                        <p className="text-center text-lg text-gray-600">
-                            No bestseller products found.
+                        <p className="text-center text-sm md:text-lg text-gray-600">
+                            Not available product at this location.
                         </p>
                     ) : (
                         <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4">

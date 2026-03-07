@@ -22,29 +22,29 @@ const DeliveryDashboard = () => {
     const [filterMonth, setFilterMonth] = useState('');
     const [filterYear, setFilterYear] = useState('');
 
-   const fetchAllData = async () => {
-    setLoading(true);
-    try {
-        const [assignedRes, deliveredRes, cancelledRes, pickupsRes, completedPickupsRes] = await Promise.all([
-            apiClient.get('/delivery/my-deliveries'),
-            apiClient.get('/delivery/delivered-orders'),
-            apiClient.get('/delivery/cancelled-orders'),
-            apiClient.get('/return-replace/my-pickups'),
-            apiClient.get(`/return-replace/my-pickups/completed?month=${filterMonth}&year=${filterYear}`),
-        ]);
+    const fetchAllData = async () => {
+        setLoading(true);
+        try {
+            const [assignedRes, deliveredRes, cancelledRes, pickupsRes, completedPickupsRes] = await Promise.all([
+                apiClient.get('/delivery/my-deliveries'),
+                apiClient.get('/delivery/delivered-orders'),
+                apiClient.get('/delivery/cancelled-orders'),
+                apiClient.get('/return-replace/my-pickups'),
+                apiClient.get(`/return-replace/my-pickups/completed?month=${filterMonth}&year=${filterYear}`),
+            ]);
 
-        setAssignedDeliveries(assignedRes.data);
-        setDeliveredOrders(deliveredRes.data);
-        setCancelledOrders(cancelledRes.data);
-        setAssignedPickups(pickupsRes.data);
-        setCompletedPickups(completedPickupsRes.data);
-    } catch (err) {
-        setError('Failed to fetch data.');
-        console.error(err.response?.data?.message || err.message);
-    } finally {
-        setLoading(false);
-    }
-};
+            setAssignedDeliveries(assignedRes.data);
+            setDeliveredOrders(deliveredRes.data);
+            setCancelledOrders(cancelledRes.data);
+            setAssignedPickups(pickupsRes.data);
+            setCompletedPickups(completedPickupsRes.data);
+        } catch (err) {
+            setError('Failed to fetch data.');
+            console.error(err.response?.data?.message || err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
 
     useEffect(() => {
@@ -101,18 +101,18 @@ const DeliveryDashboard = () => {
     };
 
     const handlePickupStatusChange = async (pickup, status) => {
-      try {
-        const token = localStorage.getItem('token');
-        await apiClient.post(
-          '/return-replace/pickup-status',
-          { requestId: pickup._id, status },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        alert('Pickup status updated successfully!');
-        fetchAllData();
-      } catch (error) {
-        alert('Failed to update pickup status.');
-      }
+        try {
+            const token = localStorage.getItem('token');
+            await apiClient.post(
+                '/return-replace/pickup-status',
+                { requestId: pickup._id, status },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            alert('Pickup status updated successfully!');
+            fetchAllData();
+        } catch (error) {
+            alert('Failed to update pickup status.');
+        }
     };
 
     if (loading) return <div className="text-center mt-10">Loading deliveries...</div>;
@@ -121,7 +121,7 @@ const DeliveryDashboard = () => {
     return (
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl font-bold mb-6">Delivery Dashboard</h1>
-            
+
             <div className="border-b border-gray-200 mb-6">
                 <nav className="-mb-px flex space-x-8">
                     <button onClick={() => setActiveTab('assigned')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'assigned' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Assigned Deliveries</button>
@@ -132,7 +132,7 @@ const DeliveryDashboard = () => {
                     <button onClick={() => setActiveTab('tracker')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'tracker' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Live Tracker</button>
                 </nav>
             </div>
-            
+
             {activeTab === 'assigned' && (
                 <div className="space-y-4">
                     {assignedDeliveries.length > 0 ? (
@@ -140,8 +140,8 @@ const DeliveryDashboard = () => {
                             <div key={delivery._id} className="bg-white rounded-lg shadow-md p-6">
                                 <p><strong>Order ID:</strong> {delivery.order?.orderNumber}</p>
                                 <p><strong>Customer:</strong> {delivery.order?.user?.name} ({delivery.order?.user?.phone})</p>
-<p><strong>Email:</strong> {delivery.order?.user?.email}</p>
-<p><strong>Address:</strong> {delivery.order?.shippingAddress?.address}, {delivery.order?.shippingAddress?.city}, {delivery.order?.shippingAddress?.postalCode}</p>
+                                <p><strong>Email:</strong> {delivery.order?.user?.email}</p>
+                                <p><strong>Address:</strong> {delivery.order?.shippingAddress?.address}, {delivery.order?.shippingAddress?.city}, {delivery.order?.shippingAddress?.postalCode}</p>
 
                                 <p><strong>Status:</strong> <span className="capitalize">{delivery.status}</span></p>
                                 <div className="mt-4 flex space-x-2">
@@ -156,36 +156,36 @@ const DeliveryDashboard = () => {
                     )}
                 </div>
             )}
-            
-           {activeTab === 'pickups' && (
-  <div className="space-y-4">
-    <h2 className="text-2xl font-semibold mb-4">Your Pickup Assignments</h2>
-    {assignedPickups.filter(p => p.status !== 'received').length > 0 ? (
-      assignedPickups.filter(p => p.status !== 'received').map(pickup => (
-        <div key={pickup._id} className="bg-white rounded-lg shadow-md p-6">
-          <p><strong>Order Number:</strong> {pickup.order?.orderNumber}</p>
-         <p><strong>Customer:</strong> {pickup.user?.name} ({pickup.user?.phone})</p>
-<p><strong>Email:</strong> {pickup.user?.email}</p>
-<p><strong>Address:</strong> {pickup.order?.shippingAddress?.address}, {pickup.order?.shippingAddress?.city}, {pickup.order?.shippingAddress?.postalCode}</p>
 
-          <p><strong>Request Type:</strong> <span className="capitalize">{pickup.type}</span></p>
-          <p><strong>Reason:</strong> {pickup.reason}</p>
-          <p><strong>Status:</strong> <span className="capitalize">{pickup.status}</span></p>
-          <div className="mt-4 flex space-x-2">
-            <button
-              onClick={() => handlePickupStatusChange(pickup, 'received')}
-              className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
-            >
-              Mark as Received
-            </button>
-          </div>
-        </div>
-      ))
-    ) : (
-      <p>No pickup assignments found.</p>
-    )}
-  </div>
-)}
+            {activeTab === 'pickups' && (
+                <div className="space-y-4">
+                    <h2 className="text-2xl font-semibold mb-4">Your Pickup Assignments</h2>
+                    {assignedPickups.filter(p => p.status !== 'received').length > 0 ? (
+                        assignedPickups.filter(p => p.status !== 'received').map(pickup => (
+                            <div key={pickup._id} className="bg-white rounded-lg shadow-md p-6">
+                                <p><strong>Order Number:</strong> {pickup.order?.orderNumber}</p>
+                                <p><strong>Customer:</strong> {pickup.user?.name} ({pickup.user?.phone})</p>
+                                <p><strong>Email:</strong> {pickup.user?.email}</p>
+                                <p><strong>Address:</strong> {pickup.order?.shippingAddress?.address}, {pickup.order?.shippingAddress?.city}, {pickup.order?.shippingAddress?.postalCode}</p>
+
+                                <p><strong>Request Type:</strong> <span className="capitalize">{pickup.type}</span></p>
+                                <p><strong>Reason:</strong> {pickup.reason}</p>
+                                <p><strong>Status:</strong> <span className="capitalize">{pickup.status}</span></p>
+                                <div className="mt-4 flex space-x-2">
+                                    <button
+                                        onClick={() => handlePickupStatusChange(pickup, 'received')}
+                                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                                    >
+                                        Mark as Received
+                                    </button>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <p>No pickup assignments found.</p>
+                    )}
+                </div>
+            )}
 
 
             {activeTab === 'delivered' && (
@@ -195,9 +195,9 @@ const DeliveryDashboard = () => {
                         deliveredOrders.map(delivery => (
                             <div key={delivery._id} className="bg-white rounded-lg shadow-md p-6">
                                 <p><strong>Order ID:</strong> {delivery.order?.orderNumber}</p>
-                               <p><strong>Customer:</strong> {delivery.order?.user?.name} ({delivery.order?.user?.phone})</p>
-<p><strong>Email:</strong> {delivery.order?.user?.email}</p>
-<p><strong>Address:</strong> {delivery.order?.shippingAddress?.address}, {delivery.order?.shippingAddress?.city}, {delivery.order?.shippingAddress?.postalCode}</p>
+                                <p><strong>Customer:</strong> {delivery.order?.user?.name} ({delivery.order?.user?.phone})</p>
+                                <p><strong>Email:</strong> {delivery.order?.user?.email}</p>
+                                <p><strong>Address:</strong> {delivery.order?.shippingAddress?.address}, {delivery.order?.shippingAddress?.city}, {delivery.order?.shippingAddress?.postalCode}</p>
 
                                 <p><strong>Status:</strong> <span className="capitalize text-green-600">{delivery.status}</span></p>
                                 <p><strong>Delivered On:</strong> {moment(delivery.deliveredAt).format('MMMM Do YYYY, h:mm:ss a')}</p>
@@ -216,9 +216,9 @@ const DeliveryDashboard = () => {
                         cancelledOrders.map(delivery => (
                             <div key={delivery._id} className="bg-white rounded-lg shadow-md p-6">
                                 <p><strong>Order ID:</strong> {delivery.order?.orderNumber}</p>
-                              <p><strong>Customer:</strong> {delivery.order?.user?.name} ({delivery.order?.user?.phone})</p>
-<p><strong>Email:</strong> {delivery.order?.user?.email}</p>
-<p><strong>Address:</strong> {delivery.order?.shippingAddress?.address}, {delivery.order?.shippingAddress?.city}, {delivery.order?.shippingAddress?.postalCode}</p>
+                                <p><strong>Customer:</strong> {delivery.order?.user?.name} ({delivery.order?.user?.phone})</p>
+                                <p><strong>Email:</strong> {delivery.order?.user?.email}</p>
+                                <p><strong>Address:</strong> {delivery.order?.shippingAddress?.address}, {delivery.order?.shippingAddress?.city}, {delivery.order?.shippingAddress?.postalCode}</p>
 
                                 <p><strong>Status:</strong> <span className="capitalize text-red-600">{delivery.status}</span></p>
                                 <p><strong>Cancelled On:</strong> {moment(delivery.updatedAt).format('MMMM Do YYYY, h:mm:ss a')}</p>
@@ -229,7 +229,7 @@ const DeliveryDashboard = () => {
                     )}
                 </div>
             )}
-            
+
             {activeTab === 'completedPickups' && (
                 <div className="space-y-4">
                     <h2 className="text-2xl font-semibold mb-4">Completed Pickups</h2>
@@ -257,8 +257,8 @@ const DeliveryDashboard = () => {
                             <div key={pickup._id} className="bg-white rounded-lg shadow-md p-6">
                                 <p><strong>Order Number:</strong> {pickup.order?.orderNumber}</p>
                                 <p><strong>Customer:</strong> {pickup.user?.name} ({pickup.user?.phone})</p>
-<p><strong>Email:</strong> {pickup.user?.email}</p>
-<p><strong>Address:</strong> {pickup.order?.shippingAddress?.address}, {pickup.order?.shippingAddress?.city}, {pickup.order?.shippingAddress?.postalCode}</p>
+                                <p><strong>Email:</strong> {pickup.user?.email}</p>
+                                <p><strong>Address:</strong> {pickup.order?.shippingAddress?.address}, {pickup.order?.shippingAddress?.city}, {pickup.order?.shippingAddress?.postalCode}</p>
 
                                 <p><strong>Request Type:</strong> <span className="capitalize">{pickup.type}</span></p>
                                 <p><strong>Reason:</strong> {pickup.reason}</p>

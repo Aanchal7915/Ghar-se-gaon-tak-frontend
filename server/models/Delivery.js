@@ -5,10 +5,10 @@ const mongoose = require('mongoose');
 const deliverySchema = new mongoose.Schema({
   order: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true },
   deliveryPerson: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  status: { 
-    type: String, 
-    enum: ['pending', 'out for delivery', 'delivered', 'cancelled'], 
-    default: 'pending' 
+  status: {
+    type: String,
+    enum: ['pending', 'out for delivery', 'delivered', 'cancelled'],
+    default: 'pending'
   },
   otp: { type: String },
   otpExpiry: { type: Date },

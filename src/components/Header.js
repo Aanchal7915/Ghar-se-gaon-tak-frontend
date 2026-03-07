@@ -41,21 +41,28 @@ const Header = () => {
     const val = e.target.value.replace(/\D/g, "");
     if (val.length <= 6) {
       setPincode(val);
-      if (val.length === 6) {
-        localStorage.setItem("selectedPincode", val);
-      } else {
-        localStorage.removeItem("selectedPincode");
-      }
-      window.dispatchEvent(new Event("pincode-updated"));
-      if (val.length === 6) {
-        setIsDeliverable(true);
-      } else {
-        setIsDeliverable(null);
-      }
-      // The deliverability check for the cart will happen in the useEffect
-      // This ensures consistency with the cart items
     }
   };
+
+  const handlePincodeSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (pincode.length === 6) {
+      localStorage.setItem("selectedPincode", pincode);
+      window.dispatchEvent(new Event("pincode-updated"));
+    }
+  };
+
+  useEffect(() => {
+    if (pincode.length === 6) {
+      localStorage.setItem("selectedPincode", pincode);
+      window.dispatchEvent(new Event("pincode-updated"));
+    } else if (pincode.length === 0) {
+      if (localStorage.getItem("selectedPincode")) {
+        localStorage.removeItem("selectedPincode");
+        window.dispatchEvent(new Event("pincode-updated"));
+      }
+    }
+  }, [pincode]);
 
   useEffect(() => {
     const checkCartDeliverability = (currentPincode, itemsInCart) => {
@@ -68,13 +75,27 @@ const Header = () => {
       );
     };
 
+    const verifyServerAvailability = async (pc) => {
+      try {
+        // Fetch products for this pincode to see if anything is available
+        const response = await apiClient.get("/products", {
+          params: { pincode: pc }
+        });
+        // If data is an array and has at least one product, it's deliverable
+        setIsDeliverable(Array.isArray(response.data) && response.data.length > 0);
+      } catch (err) {
+        console.error("Availability check failed:", err);
+        setIsDeliverable(false);
+      }
+    };
+
     if (pincode.length === 6) {
       if (cartItems.length > 0) {
         const deliverable = checkCartDeliverability(pincode, cartItems);
         setIsDeliverable(deliverable);
       } else {
-        // If cart is empty, assume deliverable if pincode is valid
-        setIsDeliverable(true);
+        // If cart is empty, check if the store has any products for this pincode
+        verifyServerAvailability(pincode);
       }
     } else {
       setIsDeliverable(null);
@@ -205,7 +226,10 @@ const Header = () => {
         {/* Right actions (desktop) */}
         <div className="hidden md:flex items-center space-x-3 lg:space-x-6">
           {/* Pincode Search Bar */}
-          <div className="flex items-center rounded-full bg-white/70 backdrop-blur px-3 py-1 border border-transparent focus-within:border-green-300 transition-all duration-200 shadow-sm">
+          <form
+            onSubmit={handlePincodeSubmit}
+            className="flex items-center rounded-full bg-white/70 backdrop-blur px-3 py-1 border border-transparent focus-within:border-green-300 transition-all duration-200 shadow-sm"
+          >
             <HiOutlineLocationMarker className="text-red-600 w-3.5 h-3.5 mr-1.5 shrink-0" />
             <input
               type="text"
@@ -220,7 +244,7 @@ const Header = () => {
                 {isDeliverable ? "Available" : "Not Available"}
               </span>
             )}
-          </div>
+          </form>
           <form
             onSubmit={handleSearch}
             className="flex items-center rounded-full bg-white/70 backdrop-blur px-3 py-1 border border-transparent focus-within:border-green-300 transition-all duration-200 shadow-sm"
@@ -280,7 +304,10 @@ const Header = () => {
         {/* Mobile icons */}
         <div className="md:hidden flex items-center space-x-1.5">
           {/* Mobile Pincode Search */}
-          <div className="flex items-center bg-white/70 backdrop-blur border border-transparent rounded-full px-1.5 py-0.5 mr-1 shadow-sm">
+          <form
+            onSubmit={handlePincodeSubmit}
+            className="flex items-center bg-white/70 backdrop-blur border border-transparent rounded-full px-1.5 py-0.5 mr-1 shadow-sm"
+          >
             <HiOutlineLocationMarker className="text-red-600 w-3 h-3 mr-0.5" />
             <input
               type="text"
@@ -295,7 +322,7 @@ const Header = () => {
                 {isDeliverable ? "Available" : "Not Available"}
               </span>
             )}
-          </div>
+          </form>
           <button onClick={toggleSearch} className="text-gray-600 p-1"><HiOutlineSearch className="w-5 h-5" /></button>
           <Link to="/cart" className="relative text-gray-600 p-1">
             <HiOutlineShoppingCart className="w-5 h-5" />

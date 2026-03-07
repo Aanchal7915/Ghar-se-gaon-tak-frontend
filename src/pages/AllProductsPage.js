@@ -301,7 +301,7 @@ const AllProductsPage = () => {
           <h1 className="text-2xl md:text-4xl font-bold text-center mb-6 md:mb-10">All Products</h1>
 
           {filteredProducts.length === 0 ? (
-            <p className="text-center text-sm md:text-lg text-gray-600">No products found.</p>
+            <p className="text-center text-sm md:text-lg text-gray-600">Not available product at this location.</p>
           ) : (
             <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
               {filteredProducts.map((product) => (

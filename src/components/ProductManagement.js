@@ -697,7 +697,7 @@ const ProductManagement = () => {
 
                   <div>
                     <label className="block text-[10px] font-black text-yellow-700 uppercase mb-1">Pack Size</label>
-                    <input type="text" name="size" value={row.size} onChange={(e) => handlePincodeRowChange(index, e)} placeholder="e.g. 1kg" className="w-full p-3 bg-white border border-yellow-200 rounded-2xl text-sm" required />
+                    <input type="text" name="size" value={row.size} onChange={(e) => handlePincodeRowChange(index, e)} placeholder="e.g. 1kg" className="w-full p-3 bg-white border border-yellow-200 rounded-2xl text-sm" />
                   </div>
 
                   <div className="grid grid-cols-3 gap-2 md:col-span-1">
@@ -804,16 +804,16 @@ const ProductManagement = () => {
                   Total Units: <span className="text-gray-900 ml-1">{product.variants.reduce((acc, v) => acc + (v.countInStock || 0), 0)}</span>
                 </div>
                 <div className="flex space-x-2">
-                  <button 
-                    onClick={() => handleEditClick(product)} 
+                  <button
+                    onClick={() => handleEditClick(product)}
                     className="p-2 md:px-4 md:py-1.5 bg-white border-2 border-yellow-400 text-yellow-600 hover:bg-yellow-400 hover:text-white transition-all rounded-xl flex items-center justify-center"
                     title="Edit Product"
                   >
                     <FaEdit className="md:mr-1.5" size={14} />
                     <span className="hidden md:inline text-[10px] font-black uppercase">Edit</span>
                   </button>
-                  <button 
-                    onClick={() => handleDeleteProduct(product._id)} 
+                  <button
+                    onClick={() => handleDeleteProduct(product._id)}
                     className="p-2 md:px-4 md:py-1.5 bg-white border-2 border-red-500 text-red-600 hover:bg-red-500 hover:text-white transition-all rounded-xl flex items-center justify-center"
                     title="Delete Product"
                   >

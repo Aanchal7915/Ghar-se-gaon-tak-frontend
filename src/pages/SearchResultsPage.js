@@ -67,8 +67,8 @@ const SearchResultsPage = () => {
                 </div>
             ) : products.length === 0 ? (
                 <div className="bg-gray-50 border border-gray-100 p-12 rounded-2xl text-center">
-                    <p className="text-xl text-gray-800 font-bold mb-2">No products found</p>
-                    <p className="text-gray-500">Try searching for something else like "Tomato", "Milk", or "Bread".</p>
+                    <p className="text-xl text-gray-800 font-bold mb-2 uppercase tracking-tight">Not available product at this location.</p>
+                    <p className="text-gray-500 italic">Try searching for something else or check another location.</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-2 md:gap-4">
