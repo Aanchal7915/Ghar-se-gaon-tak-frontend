@@ -9,7 +9,10 @@ const BestsellerProductsSection = () => {
     useEffect(() => {
         const fetchBestsellers = async () => {
             try {
-                const response = await apiClient.get('/products/bestseller');
+                const pincode = localStorage.getItem("selectedPincode");
+                const response = await apiClient.get('/products/bestseller', {
+                    params: { pincode }
+                });
                 setProducts(response.data.slice(0, 8)); // Revert to 8 products for desktop row
             } catch (error) {
                 console.error('Failed to fetch bestseller products:', error);
@@ -18,6 +21,12 @@ const BestsellerProductsSection = () => {
             }
         };
         fetchBestsellers();
+
+        const handlePincodeUpdate = () => {
+            fetchBestsellers();
+        };
+        window.addEventListener("pincode-updated", handlePincodeUpdate);
+        return () => window.removeEventListener("pincode-updated", handlePincodeUpdate);
     }, []);
 
     if (loading) return null;

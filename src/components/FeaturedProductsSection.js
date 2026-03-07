@@ -10,7 +10,10 @@ const FeaturedProductsSection = () => {
     useEffect(() => {
         const fetchFeatured = async () => {
             try {
-                const response = await apiClient.get('/products/featured');
+                const pincode = localStorage.getItem("selectedPincode");
+                const response = await apiClient.get('/products/featured', {
+                    params: { pincode }
+                });
                 setProducts(response.data.slice(0, 8)); // Revert to 8 products for desktop row
             } catch (error) {
                 console.error('Failed to fetch featured products:', error);
@@ -19,6 +22,12 @@ const FeaturedProductsSection = () => {
             }
         };
         fetchFeatured();
+
+        const handlePincodeUpdate = () => {
+            fetchFeatured();
+        };
+        window.addEventListener("pincode-updated", handlePincodeUpdate);
+        return () => window.removeEventListener("pincode-updated", handlePincodeUpdate);
     }, []);
 
     if (loading) return null;

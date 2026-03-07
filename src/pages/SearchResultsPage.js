@@ -20,9 +20,10 @@ const SearchResultsPage = () => {
             }
             try {
                 setLoading(true);
+                const pincode = localStorage.getItem("selectedPincode");
                 // Use params object for cleaner query string handling
                 const response = await apiClient.get('/products/search', {
-                    params: { keyword: query }
+                    params: { keyword: query, pincode }
                 });
                 setProducts(response.data);
                 setError(null);
@@ -36,6 +37,12 @@ const SearchResultsPage = () => {
         };
 
         fetchSearchResults();
+
+        const handlePincodeUpdate = () => {
+            fetchSearchResults();
+        };
+        window.addEventListener("pincode-updated", handlePincodeUpdate);
+        return () => window.removeEventListener("pincode-updated", handlePincodeUpdate);
     }, [query]);
 
     if (loading) return <LoadingSpinner />;

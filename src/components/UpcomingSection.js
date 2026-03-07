@@ -11,7 +11,10 @@ const UpcomingSection = () => {
     useEffect(() => {
         const fetchUpcoming = async () => {
             try {
-                const response = await apiClient.get('/products/upcoming');
+                const pincode = localStorage.getItem("selectedPincode");
+                const response = await apiClient.get('/products/upcoming', {
+                    params: { pincode }
+                });
                 setProducts(response.data);
             } catch (error) {
                 console.error('Failed to fetch upcoming products:', error);
@@ -20,6 +23,12 @@ const UpcomingSection = () => {
             }
         };
         fetchUpcoming();
+
+        const handlePincodeUpdate = () => {
+            fetchUpcoming();
+        };
+        window.addEventListener("pincode-updated", handlePincodeUpdate);
+        return () => window.removeEventListener("pincode-updated", handlePincodeUpdate);
     }, []);
 
     if (loading || products.length === 0) return null;

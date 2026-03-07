@@ -9,8 +9,11 @@ const NewReleaseProductsSection = () => {
     useEffect(() => {
         const fetchRecent = async () => {
             try {
+                const pincode = localStorage.getItem("selectedPincode");
                 // Fetch recent products and limit to 8 for the homepage row
-                const response = await apiClient.get('/products/recent?limit=8');
+                const response = await apiClient.get('/products/recent', {
+                    params: { limit: 8, pincode }
+                });
                 setProducts(response.data); // Revert to 8 products for desktop row
             } catch (error) {
                 console.error('Failed to fetch recent products:', error);
@@ -19,6 +22,12 @@ const NewReleaseProductsSection = () => {
             }
         };
         fetchRecent();
+
+        const handlePincodeUpdate = () => {
+            fetchRecent();
+        };
+        window.addEventListener("pincode-updated", handlePincodeUpdate);
+        return () => window.removeEventListener("pincode-updated", handlePincodeUpdate);
     }, []);
 
     if (loading) return null;

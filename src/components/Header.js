@@ -52,14 +52,34 @@ const Header = () => {
       } else {
         setIsDeliverable(null);
       }
+      // The deliverability check for the cart will happen in the useEffect
+      // This ensures consistency with the cart items
     }
   };
 
   useEffect(() => {
+    const checkCartDeliverability = (currentPincode, itemsInCart) => {
+      if (!currentPincode || currentPincode.trim().length !== 6) return false;
+      const pc = currentPincode.trim();
+      return itemsInCart.every(item =>
+        !item.pincodePricing ||
+        item.pincodePricing.length === 0 ||
+        item.pincodePricing.some(p => p.pincode === pc)
+      );
+    };
+
     if (pincode.length === 6) {
-      setIsDeliverable(true);
+      if (cartItems.length > 0) {
+        const deliverable = checkCartDeliverability(pincode, cartItems);
+        setIsDeliverable(deliverable);
+      } else {
+        // If cart is empty, assume deliverable if pincode is valid
+        setIsDeliverable(true);
+      }
+    } else {
+      setIsDeliverable(null);
     }
-  }, [pincode]);
+  }, [pincode, cartItems]);
 
   // Fetch categories for the menu
   useEffect(() => {

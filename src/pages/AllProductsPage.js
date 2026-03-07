@@ -161,7 +161,10 @@ const AllProductsPage = () => {
   useEffect(() => {
     const fetchAllProducts = async () => {
       try {
-        const response = await apiClient.get("/products");
+        const pincode = localStorage.getItem("selectedPincode");
+        const response = await apiClient.get("/products", {
+          params: { pincode }
+        });
         setProducts(response.data);
       } catch (err) {
         setError(err.message);
@@ -172,6 +175,12 @@ const AllProductsPage = () => {
       }
     };
     fetchAllProducts();
+
+    const handlePincodeUpdate = () => {
+      fetchAllProducts();
+    };
+    window.addEventListener("pincode-updated", handlePincodeUpdate);
+    return () => window.removeEventListener("pincode-updated", handlePincodeUpdate);
   }, []);
 
   // When products load, compute global min/max from variants or top-level price

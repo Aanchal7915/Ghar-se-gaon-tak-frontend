@@ -81,8 +81,11 @@ const CategoryProductsPage = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Fetch products
-        const productsResponse = await apiClient.get(`/products/category/${categoryId}`);
+        const pincode = localStorage.getItem("selectedPincode");
+        // Fetch products with pincode
+        const productsResponse = await apiClient.get(`/products/category/${categoryId}`, {
+          params: { pincode }
+        });
         setProducts(productsResponse.data);
 
         // Fetch category name
@@ -103,6 +106,12 @@ const CategoryProductsPage = () => {
     };
 
     if (categoryId) fetchData();
+
+    const handlePincodeUpdate = () => {
+      if (categoryId) fetchData();
+    };
+    window.addEventListener("pincode-updated", handlePincodeUpdate);
+    return () => window.removeEventListener("pincode-updated", handlePincodeUpdate);
   }, [categoryId]);
 
 

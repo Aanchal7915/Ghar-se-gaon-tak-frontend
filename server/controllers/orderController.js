@@ -28,8 +28,8 @@ exports.getOrderStatus = async (req, res) => {
   return res.json({ isOpen: true, reason: '' });
 };
 
-// Allowed Pincodes (Rohtak & Surrounding Areas)
-const ALLOWED_PINCODES = ['124001', '124021', '124401', '124406', '124411', '124113', '124002', '124003', '124501', '124022'];
+// Generic pincode validation for India (6 digits)
+const isValidPincode = (pc) => pc && /^\d{6}$/.test(pc.toString().trim());
 
 exports.createOrder = async (req, res) => {
   // Check Order Timing: 12:00 PM to 6:00 PM (18:00)
@@ -52,7 +52,7 @@ exports.createOrder = async (req, res) => {
 
   const { orderItems, shippingAddress, totalPrice, customerLocation, customerInfo } = req.body;
 
-  const hasValidShippingAddress = shippingAddress && shippingAddress.postalCode && ALLOWED_PINCODES.includes(shippingAddress.postalCode.toString().trim());
+  const hasValidShippingAddress = shippingAddress && shippingAddress.postalCode && isValidPincode(shippingAddress.postalCode);
 
   const hasValidMapPin = customerLocation &&
     typeof customerLocation.latitude === 'number' &&
@@ -61,13 +61,13 @@ exports.createOrder = async (req, res) => {
     !Number.isNaN(customerLocation.longitude);
 
   if (!hasValidShippingAddress && !hasValidMapPin) {
-    return res.status(400).json({ message: 'Please provide either a valid 124*** pincode address OR set your delivery pin on the map.' });
+    return res.status(400).json({ message: 'Please provide a valid 6-digit pincode address OR set your delivery pin on the map.' });
   }
 
   // Pincode Validation: Only enforce if they provided a manual address but no map pin
   if (shippingAddress && shippingAddress.postalCode) {
-    if (!ALLOWED_PINCODES.includes(shippingAddress.postalCode.toString().trim())) {
-      return res.status(400).json({ message: 'Delivery not available at your location. We currently serve only in Rohtak and surrounding areas.' });
+    if (!isValidPincode(shippingAddress.postalCode)) {
+      return res.status(400).json({ message: 'Delivery not available at your location. Please enter a valid 6-digit pincode.' });
     }
   }
 

@@ -25,7 +25,9 @@ const bufferUpload = (buffer, folder) => {
 // @access  Public
 exports.getProducts = async (req, res) => {
   try {
-    const products = await Product.find({}).populate('category');
+    const { pincode } = req.query;
+    const filter = pincode ? { 'pincodePricing.pincode': pincode } : {};
+    const products = await Product.find(filter).populate('category');
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: 'Server Error' });
@@ -207,26 +209,26 @@ exports.updateProduct = async (req, res) => {
 
 exports.getProductsByCategory = async (req, res) => {
   try {
-    const products = await Product.find({ category: req.params.categoryId });
+    const { pincode } = req.query;
+    const filter = { category: req.params.categoryId };
+    if (pincode) filter['pincodePricing.pincode'] = pincode;
+
+    const products = await Product.find(filter);
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-//   try {
-//     const products = await Product.find({ subCategory: req.params.subCategory }).limit(9);
-//     res.json(products);
-//   } catch (error) {
-//     res.status(500).json({ message: error.message });
-//   }
-// };
 exports.getProductsBySubCategory = async (req, res) => {
   const { subCategory } = req.params;
+  const { pincode } = req.query;
 
-  // Find products by subCategory and populate the 'category' field
-  const products = await Product.find({ subCategory })
-    .populate('category', 'name') // The second argument 'name' is optional, but it optimizes the query by only returning the name field.
+  const filter = { subCategory };
+  if (pincode) filter['pincodePricing.pincode'] = pincode;
+
+  const products = await Product.find(filter)
+    .populate('category', 'name')
     .exec();
 
   if (!products || products.length === 0) {
@@ -236,9 +238,14 @@ exports.getProductsBySubCategory = async (req, res) => {
 
   res.json(products);
 };
+
 exports.getProductsByGender = async (req, res) => {
   try {
-    const products = await Product.find({ gender: req.params.gender });
+    const { pincode } = req.query;
+    const filter = { gender: req.params.gender };
+    if (pincode) filter['pincodePricing.pincode'] = pincode;
+
+    const products = await Product.find(filter);
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -247,7 +254,11 @@ exports.getProductsByGender = async (req, res) => {
 
 exports.getFeaturedProducts = async (req, res) => {
   try {
-    const products = await Product.find({ isFeatured: true }).populate('category', 'name');
+    const { pincode } = req.query;
+    const filter = { isFeatured: true };
+    if (pincode) filter['pincodePricing.pincode'] = pincode;
+
+    const products = await Product.find(filter).populate('category', 'name');
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -256,7 +267,11 @@ exports.getFeaturedProducts = async (req, res) => {
 
 exports.getBestsellerProducts = async (req, res) => {
   try {
-    const products = await Product.find({ isBestseller: true }).populate('category', 'name');
+    const { pincode } = req.query;
+    const filter = { isBestseller: true };
+    if (pincode) filter['pincodePricing.pincode'] = pincode;
+
+    const products = await Product.find(filter).populate('category', 'name');
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -265,7 +280,11 @@ exports.getBestsellerProducts = async (req, res) => {
 
 exports.getUpcomingProducts = async (req, res) => {
   try {
-    const products = await Product.find({ isComingSoon: true }).populate('category', 'name');
+    const { pincode } = req.query;
+    const filter = { isComingSoon: true };
+    if (pincode) filter['pincodePricing.pincode'] = pincode;
+
+    const products = await Product.find(filter).populate('category', 'name');
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -273,44 +292,49 @@ exports.getUpcomingProducts = async (req, res) => {
 };
 
 exports.getRecentProducts = async (req, res) => {
-  const limit = parseInt(req.query.limit, 10) || 20; // Default to 20 products
+  const limit = parseInt(req.query.limit, 10) || 20;
+  const { pincode } = req.query;
 
-  // The key change: add .populate('category', 'name')
-  const products = await Product.find({ isComingSoon: { $ne: true } })
-    .sort({ createdAt: -1 }) // Sort by creation date, newest first
+  const filter = { isComingSoon: { $ne: true } };
+  if (pincode) filter['pincodePricing.pincode'] = pincode;
+
+  const products = await Product.find(filter)
+    .sort({ createdAt: -1 })
     .limit(limit)
-    .populate('category', 'name') // This populates the category field
+    .populate('category', 'name')
     .exec();
 
   res.json(products);
 };
+
 exports.searchProducts = async (req, res) => {
-  const { keyword } = req.query;
+  const { keyword, pincode } = req.query;
   if (!keyword) {
     return res.status(400).json({ message: 'Search keyword is required' });
   }
 
   try {
-    const regex = new RegExp(keyword, 'i'); // 'i' for case-insensitive search
-
-    const products = await Product.find({
+    const regex = new RegExp(keyword, 'i');
+    const searchFilter = {
       $or: [
         { name: { $regex: regex } },
         { brand: { $regex: regex } },
         { subCategory: { $regex: regex } },
         { gender: { $regex: regex } }
       ]
-    }).populate('category');
+    };
 
+    let finalFilter = searchFilter;
+    if (pincode) {
+      finalFilter = {
+        $and: [searchFilter, { 'pincodePricing.pincode': pincode }]
+      };
+    }
+
+    const products = await Product.find(finalFilter).populate('category');
     res.json(products);
   } catch (error) {
     console.error("Error searching products:", error);
     res.status(500).json({ message: error.message });
   }
 };
-// @desc    Update a product with new images and variants
-// @route   PUT /api/products/:id
-// @access  Private/Admin
-
-
-// @desc    Update a product with 

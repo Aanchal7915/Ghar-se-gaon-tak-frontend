@@ -27,7 +27,11 @@ const CartPage = () => {
     const { cartItems, removeFromCart, updateCartQuantity, getTotalPrice, clearCart } = useCart();
     const navigate = useNavigate();
     const [customerInfo, setCustomerInfo] = useState({ name: '', phone: '' });
-    const [shippingAddress, setShippingAddress] = useState({ address: '', city: '', postalCode: '' });
+    const [shippingAddress, setShippingAddress] = useState({
+        address: '',
+        city: '',
+        postalCode: localStorage.getItem("selectedPincode") || ''
+    });
     const [customerLocation, setCustomerLocation] = useState({ latitude: null, longitude: null });
     const [mapCenter, setMapCenter] = useState([28.8955, 76.6066]);
     const [pinPosition, setPinPosition] = useState([28.8955, 76.6066]);
@@ -115,14 +119,29 @@ const CartPage = () => {
         return null;
     };
 
+    const isDeliverableAtPincode = (pincode) => {
+        if (!pincode || pincode.trim().length !== 6) return false;
+        const pc = pincode.trim();
+        return cartItems.every(item =>
+            !item.pincodePricing ||
+            item.pincodePricing.length === 0 ||
+            item.pincodePricing.some(p => p.pincode === pc)
+        );
+    };
+
     if (loading || !user) return null;
 
     const handleCheckout = async (e) => {
         e.preventDefault();
 
-        const allowedPincodes = ['124001', '124021', '124401', '124406', '124411', '124113', '124002', '124003', '124501', '124022'];
-        if (!allowedPincodes.includes(shippingAddress.postalCode.trim())) {
-            alert('Delivery not available at your location. We currently serve only in Rohtak and surrounding areas.');
+        const pCode = shippingAddress.postalCode.trim();
+        if (!/^\d{6}$/.test(pCode)) {
+            alert('Please enter a valid 6-digit pincode.');
+            return;
+        }
+
+        if (!isDeliverableAtPincode(pCode)) {
+            alert('One or more items in your cart are not deliverable to this pincode.');
             return;
         }
 
@@ -368,13 +387,16 @@ const CartPage = () => {
                                                 value={shippingAddress.postalCode}
                                                 onChange={(e) => setShippingAddress({ ...shippingAddress, postalCode: e.target.value })}
                                                 placeholder="Postal Code"
-                                                className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none ${shippingAddress.postalCode && !['124001', '124021', '124401', '124406', '124411', '124113', '124002', '124003', '124501', '124022'].includes(shippingAddress.postalCode.trim())
+                                                className={`w-full px-4 py-3 bg-gray-50 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all outline-none ${shippingAddress.postalCode && (!/^\d{6}$/.test(shippingAddress.postalCode.trim()) || !isDeliverableAtPincode(shippingAddress.postalCode))
                                                     ? 'border-red-500'
                                                     : 'border-gray-200'
                                                     }`}
                                                 required
                                             />
-                                            {shippingAddress.postalCode && !['124001', '124021', '124401', '124406', '124411', '124113', '124002', '124003', '124501', '124022'].includes(shippingAddress.postalCode.trim()) && (
+                                            {shippingAddress.postalCode && !/^\d{6}$/.test(shippingAddress.postalCode.trim()) && (
+                                                <p className="text-[10px] text-red-500 mt-1 font-bold italic">Please enter a valid 6-digit pincode</p>
+                                            )}
+                                            {shippingAddress.postalCode && /^\d{6}$/.test(shippingAddress.postalCode.trim()) && !isDeliverableAtPincode(shippingAddress.postalCode) && (
                                                 <p className="text-[10px] text-red-500 mt-1 font-bold italic">Delivery not available at your location</p>
                                             )}
                                         </div>
