@@ -20,14 +20,17 @@ const LoginRegisterPage = () => {
   const [isOtpSent, setIsOtpSent] = useState(false);
   const [signupMessage, setSignupMessage] = useState("");
   const [signupError, setSignupError] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoginSubmitting, setIsLoginSubmitting] = useState(false);
+  const [isSignupSubmitting, setIsSignupSubmitting] = useState(false);
 
   const navigate = useNavigate();
 
   // 🔹 Handle Login
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+    if (e) e.preventDefault();
+    if (isLoginSubmitting) return;
+    setIsLoginSubmitting(true);
+    setLoginError("");
     try {
       const { data } = await apiClient.post("/auth/login", {
         email: loginEmail,
@@ -39,14 +42,14 @@ const LoginRegisterPage = () => {
     } catch (err) {
       setLoginError(err.response?.data?.message || "Login failed");
     } finally {
-      setIsSubmitting(false);
+      setIsLoginSubmitting(false);
     }
   };
 
   // 🔹 Request OTP
   const handleRequestOtp = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setIsSignupSubmitting(true);
     try {
       await apiClient.post("/auth/request-otp", {
         email: signupEmail,
@@ -58,14 +61,14 @@ const LoginRegisterPage = () => {
       setSignupMessage(err.response?.data?.message || "Failed to send OTP.");
       setSignupError(true);
     } finally {
-      setIsSubmitting(false);
+      setIsSignupSubmitting(false);
     }
   };
 
   // 🔹 Handle Signup
   const handleSignup = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setIsSignupSubmitting(true);
     try {
       await apiClient.post("/auth/verify-otp", {
         email: signupEmail,
@@ -84,7 +87,7 @@ const LoginRegisterPage = () => {
       setSignupMessage(err.response?.data?.message || "Signup failed.");
       setSignupError(true);
     } finally {
-      setIsSubmitting(false);
+      setIsSignupSubmitting(false);
     }
   };
 
@@ -121,12 +124,12 @@ const LoginRegisterPage = () => {
                 <label>Password</label>
               </div>
               <div className="input-box">
-                <button type="submit" className="btn" disabled={isSubmitting}>
+                <button type="submit" className="btn" disabled={isLoginSubmitting}>
                   Login
                 </button>
               </div>
 
-              {isSubmitting && (
+              {isLoginSubmitting && (
                 <div className="flex items-center justify-center gap-2 mt-4 text-white">
                   <div className="spinner"></div>
                   <span className="text-sm font-medium">Logging in...</span>
@@ -212,11 +215,11 @@ const LoginRegisterPage = () => {
                   </div>
                 </>
               )}
-              <button type="submit" className="btn" disabled={isSubmitting}>
+              <button type="submit" className="btn" disabled={isSignupSubmitting}>
                 {isOtpSent ? "Verify & Register" : "Request OTP"}
               </button>
 
-              {isSubmitting && (
+              {isSignupSubmitting && (
                 <div className="flex items-center justify-center gap-2 mt-4 text-white">
                   <div className="spinner"></div>
                   <span className="text-sm font-medium">{isOtpSent ? "Registering..." : "Sending..."}</span>
