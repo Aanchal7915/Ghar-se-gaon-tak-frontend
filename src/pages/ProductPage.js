@@ -277,13 +277,9 @@ const ProductPage = () => {
     ? product?.pincodePricing?.find((entry) => entry.pincode === selectedPincode.trim() && entry.size === selectedVariant.size)
     : null;
 
-  // Fallback prices if no specific rule exists for this pincode
-  const fallbackPrice = selectedVariant?.price || product?.pincodePricing?.find(p => p.size === selectedVariant?.size && p.price)?.price;
-  const fallbackOriginalPrice = selectedVariant?.originalPrice || product?.pincodePricing?.find(p => p.size === selectedVariant?.size && p.originalPrice)?.originalPrice;
-
-  const effectivePrice = pincodeRule ? Number(pincodeRule.price) : (fallbackPrice ? Number(fallbackPrice) : null);
-  const effectiveOriginalPrice = pincodeRule ? (pincodeRule.originalPrice || null) : (fallbackOriginalPrice || null);
-  const effectiveStock = pincodeRule ? Number(pincodeRule.inventory) : (selectedVariant && !selectedPincode ? selectedVariant.countInStock : 0);
+  const effectivePrice = pincodeRule ? Number(pincodeRule.price) : null;
+  const effectiveOriginalPrice = pincodeRule ? (pincodeRule.originalPrice || null) : null;
+  const effectiveStock = pincodeRule ? Number(pincodeRule.inventory) : 0;
   const isUnavailableForPincode = selectedPincode.length === 6 && !pincodeRule;
   const availableLocations = [...new Set(
     (product?.pincodePricing || [])
@@ -506,25 +502,33 @@ const ProductPage = () => {
           )}
 
           <div className="mt-3 flex flex-col gap-1">
-            <div className="flex items-baseline gap-3">
-              <span className="text-2xl md:text-3xl font-extrabold text-gray-900">
-                ₹{effectivePrice ?? "N/A"}
-              </span>
-              {effectiveOriginalPrice && (
-                <span className="text-base md:text-xl text-gray-400 font-medium">
-                  MRP: <span className="line-through decoration-red-500/40">₹{effectiveOriginalPrice}</span>
-                </span>
-              )}
-            </div>
-            {effectiveOriginalPrice && (
-              <span className="inline-block bg-green-100 text-green-700 text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full w-fit">
-                SAVE ₹{effectiveOriginalPrice - (effectivePrice ?? (selectedVariant?.price || 0))} ({Math.round(((effectiveOriginalPrice - (effectivePrice ?? (selectedVariant?.price || 0))) / effectiveOriginalPrice) * 100)}% OFF)
-              </span>
+            {selectedPincode.length < 6 ? (
+              <p className="text-orange-600 font-bold text-sm md:text-base animate-pulse">
+                Please enter 6-digit pincode to check price and availability.
+              </p>
+            ) : (
+              <>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-2xl md:text-3xl font-extrabold text-gray-900">
+                    ₹{effectivePrice ?? "N/A"}
+                  </span>
+                  {effectiveOriginalPrice && (
+                    <span className="text-base md:text-xl text-gray-400 font-medium">
+                      MRP: <span className="line-through decoration-red-500/40">₹{effectiveOriginalPrice}</span>
+                    </span>
+                  )}
+                </div>
+                {effectiveOriginalPrice && effectivePrice && (
+                  <span className="inline-block bg-green-100 text-green-700 text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full w-fit">
+                    SAVE ₹{effectiveOriginalPrice - effectivePrice} ({Math.round(((effectiveOriginalPrice - effectivePrice) / effectiveOriginalPrice) * 100)}% OFF)
+                  </span>
+                )}
+              </>
             )}
           </div>
 
           <div className="mt-4">
-            <h4 className="font-semibold text-gray-800 mb-2 text-sm md:text-base">Pincode:</h4>
+            <h4 className="font-semibold text-gray-800 mb-2 text-sm md:text-base">Pincode <span className="text-red-600">*</span>:</h4>
             <input
               type="text"
               value={selectedPincode}
@@ -613,7 +617,7 @@ const ProductPage = () => {
               >
                 Coming Soon
               </button>
-            ) : selectedVariant && effectiveStock > 0 && !isUnavailableForPincode ? (
+            ) : (selectedPincode.length === 6 && selectedVariant && effectiveStock > 0 && !isUnavailableForPincode) ? (
               <button
                 onClick={handleAddToCart}
                 className={`w-full font-bold py-3 md:py-4 rounded-md text-sm md:text-base transition transform shadow-lg ${isAuthenticated
@@ -628,7 +632,7 @@ const ProductPage = () => {
                 className="w-full bg-gray-400 text-white font-bold py-3 md:py-4 rounded-md text-base md:text-lg cursor-not-allowed shadow-md"
                 disabled
               >
-                Out of Stock
+                {selectedPincode.length < 6 ? 'Enter Pincode' : 'Out of Stock'}
               </button>
             )}
           </div>

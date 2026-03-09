@@ -225,6 +225,23 @@ const ProductCard = ({ product }) => {
     return { rate, count };
   }, [product._id]);
 
+  // Pincode Logic for Card
+  const selectedPincode = localStorage.getItem("selectedPincode");
+
+  const localPriceData = useMemo(() => {
+    if (!selectedPincode || !product.pincodePricing || product.pincodePricing.length === 0) {
+      return null;
+    }
+    // Find first available rule for this pincode
+    return product.pincodePricing.find(p => p.pincode === selectedPincode.trim());
+  }, [product.pincodePricing, selectedPincode]);
+
+  const effectivePrice = localPriceData ? localPriceData.price : null;
+  const effectiveOriginalPrice = localPriceData ? localPriceData.originalPrice : null;
+  const effectiveStock = localPriceData ? localPriceData.inventory : 0;
+
+  const isOutOfStock = effectiveStock <= 0;
+
   const handleAdd = (e) => {
     e.preventDefault();
     if (!isAuthenticated) {
@@ -232,7 +249,7 @@ const ProductCard = ({ product }) => {
       return;
     }
     if (!defaultVariant) return;
-    addToCart({ ...product, selectedVariant: defaultVariant });
+    addToCart({ ...product, selectedVariant: { ...defaultVariant, price: effectivePrice, inventory: effectiveStock } });
   };
 
   const handleIncrement = (e) => {
@@ -285,8 +302,6 @@ const ProductCard = ({ product }) => {
     const videoExtensions = [".mp4", ".mov", ".webm", ".ogg"];
     return videoExtensions.some((ext) => url.endsWith(ext));
   };
-
-  const isOutOfStock = product.variants.every((v) => v.countInStock <= 0);
   const isComingSoon = product.isComingSoon;
 
   // ✅ Fixed wishlist toggle
@@ -433,11 +448,11 @@ const ProductCard = ({ product }) => {
           <div className="flex flex-col">
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] sm:text-[15px] font-bold text-gray-900 leading-none">
-                ₹{product.variants[0].price}
+                {effectivePrice ? `₹${effectivePrice}` : "Enter Pincode"}
               </span>
-              {product.variants[0].originalPrice && (
+              {effectiveOriginalPrice && (
                 <span className="text-[7px] sm:text-[11px] text-gray-400 line-through decoration-red-500/50 leading-none">
-                  ₹{product.variants[0].originalPrice}
+                  ₹{effectiveOriginalPrice}
                 </span>
               )}
             </div>
@@ -462,7 +477,7 @@ const ProductCard = ({ product }) => {
                   : "border-blue-600 text-blue-700 bg-blue-50 hover:bg-blue-600 hover:text-white"
                   }`}
               >
-                {isAuthenticated ? 'Add' : 'Login'}
+                {isAuthenticated ? (effectivePrice ? 'Add' : 'Check') : 'Login'}
               </button>
             ) : (
               <div className="flex items-center bg-green-600 text-white rounded shadow-sm overflow-hidden">

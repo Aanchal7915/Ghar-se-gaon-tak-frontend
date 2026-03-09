@@ -280,11 +280,17 @@ const ProductManagement = () => {
 
   const handleAddProduct = async (e) => {
     e.preventDefault();
+    const pricingPayload = buildPincodePricingPayload();
+    if (pricingPayload.length === 0) {
+      alert("Please add at least one valid Pincode Pricing rule. Global products are not allowed.");
+      return;
+    }
+
     const token = localStorage.getItem('token');
     const data = new FormData();
     for (const key in formData) data.append(key, formData[key]);
     data.append('variants', JSON.stringify(variants));
-    data.append('pincodePricing', JSON.stringify(buildPincodePricingPayload()));
+    data.append('pincodePricing', JSON.stringify(pricingPayload));
     for (const image of images) data.append('images', image);
     if (videoFile) data.append('video', videoFile);
 
@@ -353,11 +359,17 @@ const ProductManagement = () => {
 
   const handleUpdateProduct = async (e) => {
     e.preventDefault();
+    const pricingPayload = buildPincodePricingPayload();
+    if (pricingPayload.length === 0) {
+      alert("Please add at least one valid Pincode Pricing rule. Global products are not allowed.");
+      return;
+    }
+
     const token = localStorage.getItem('token');
     const data = new FormData();
     for (const key in formData) data.append(key, formData[key]);
     data.append('variants', JSON.stringify(variants));
-    data.append('pincodePricing', JSON.stringify(buildPincodePricingPayload()));
+    data.append('pincodePricing', JSON.stringify(pricingPayload));
     for (const image of images) data.append('images', image);
     for (const imageUrl of existingImages) data.append('existingImages', imageUrl);
     if (videoFile) data.append('video', videoFile);
@@ -683,7 +695,7 @@ const ProductManagement = () => {
         </div>
 
         <div className="space-y-4">
-          <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest border-b pb-1">Pincode Price & Inventory</h3>
+          <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest border-b pb-1">Pincode Price & Inventory <span className="text-red-600 text-lg">*</span></h3>
           <div className="space-y-4">
             {pincodePricingRows.map((row, index) => (
               <div key={`pincode-row-${index}`} className="relative p-5 border-2 border-yellow-100 rounded-3xl bg-yellow-50/20">

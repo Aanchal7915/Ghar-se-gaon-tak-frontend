@@ -69,8 +69,7 @@ const Header = () => {
       if (!currentPincode || currentPincode.trim().length !== 6) return false;
       const pc = currentPincode.trim();
       return itemsInCart.every(item =>
-        !item.pincodePricing ||
-        item.pincodePricing.length === 0 ||
+        item.pincodePricing &&
         item.pincodePricing.some(p => p.pincode === pc)
       );
     };
