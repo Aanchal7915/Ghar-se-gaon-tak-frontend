@@ -126,8 +126,11 @@ const Header = () => {
 
   useEffect(() => {
     if (pincode.length === 6) {
-      localStorage.setItem("selectedPincode", pincode);
-      window.dispatchEvent(new Event("pincode-updated"));
+      const saved = localStorage.getItem("selectedPincode");
+      if (saved !== pincode) {
+        localStorage.setItem("selectedPincode", pincode);
+        window.dispatchEvent(new Event("pincode-updated"));
+      }
     } else if (pincode.length === 0) {
       if (localStorage.getItem("selectedPincode")) {
         localStorage.removeItem("selectedPincode");
@@ -137,22 +140,28 @@ const Header = () => {
   }, [pincode]);
 
   useEffect(() => {
-    const checkCartDeliverability = (currentPincode, itemsInCart) => {
-      if (!currentPincode || currentPincode.trim().length !== 6) return false;
-      const pc = currentPincode.trim();
-      return itemsInCart.every(item =>
-        item.pincodePricing &&
-        item.pincodePricing.some(p => p.pincode === pc)
-      );
+    const handlePincodeUpdate = () => {
+      const saved = localStorage.getItem("selectedPincode") || "124001";
+      if (saved !== pincode) {
+        setPincode(saved);
+      }
     };
+    window.addEventListener("pincode-updated", handlePincodeUpdate);
+    return () => window.removeEventListener("pincode-updated", handlePincodeUpdate);
+  }, [pincode]);
 
+  useEffect(() => {
     const verifyServerAvailability = async (pc) => {
+      if (!pc || pc.length !== 6) {
+        setIsDeliverable(null);
+        return;
+      }
       try {
         // Fetch products for this pincode to see if anything is available
         const response = await apiClient.get("/products", {
-          params: { pincode: pc }
+          params: { pincode: pc, limit: 1 } // limit to 1 for efficiency
         });
-        // If data is an array and has at least one product, it's deliverable
+        // If data is an array and has at least one product, it's deliverable/serviceable
         setIsDeliverable(Array.isArray(response.data) && response.data.length > 0);
       } catch (err) {
         console.error("Availability check failed:", err);
@@ -161,17 +170,11 @@ const Header = () => {
     };
 
     if (pincode.length === 6) {
-      if (cartItems.length > 0) {
-        const deliverable = checkCartDeliverability(pincode, cartItems);
-        setIsDeliverable(deliverable);
-      } else {
-        // If cart is empty, check if the store has any products for this pincode
-        verifyServerAvailability(pincode);
-      }
+      verifyServerAvailability(pincode);
     } else {
       setIsDeliverable(null);
     }
-  }, [pincode, cartItems]);
+  }, [pincode]);
 
   // Fetch categories for the menu
   useEffect(() => {

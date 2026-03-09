@@ -6,7 +6,7 @@ import React, { useState, useEffect } from 'react';
 import apiClient from '../services/apiClient';
 import moment from 'moment';
 
-const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab }) => {
+const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab, setRefreshFlag }) => {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -89,6 +89,7 @@ const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab }) => {
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             await fetchPendingRequests();
+            if (setRefreshFlag) setRefreshFlag(prev => !prev);
             setActiveTab('unassignedOrders');
         } catch (err) {
             console.error(err);
@@ -154,7 +155,7 @@ const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab }) => {
                                 </div>
                             </div>
                             <p><strong>Reason:</strong> {request.reason}</p>
-                            <p><strong>Status:</strong> <button onClick={() => handleMoveToUnassigned(request._id)} className="text-blue-600 font-bold hover:underline">Unassigned Deliveries</button></p>
+                            <p><strong>Status:</strong> <span className="capitalize">{request.status}</span></p>
                             <div className="mt-4 flex space-x-2">
                                 {request.status === 'pending' && (
                                     <button
@@ -166,7 +167,7 @@ const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab }) => {
                                 )}
                                 {request.status === 'approved' && (
                                     <button
-                                        onClick={() => handleAssignPickupClick(request)}
+                                        onClick={() => handleMoveToUnassigned(request._id)}
                                         className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
                                     >
                                         Assign for Pickup

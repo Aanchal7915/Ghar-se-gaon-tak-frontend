@@ -186,6 +186,7 @@ const ProductPage = () => {
       _id: product._id,
       name: product.name,
       images: product.images,
+      pincodePricing: product.pincodePricing,
       selectedVariant: {
         ...selectedVariant,
         price: effectivePrice,

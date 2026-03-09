@@ -256,7 +256,13 @@ const AdminDashboard = () => {
                 </div>
             )}
 
-            {activeTab === 'pendingReturns' && <ReturnReplaceRequests deliveryPartners={deliveryPartners} setActiveTab={setActiveTab} />}
+            {activeTab === 'pendingReturns' && (
+                <ReturnReplaceRequests
+                    deliveryPartners={deliveryPartners}
+                    setActiveTab={setActiveTab}
+                    setRefreshFlag={setRefreshFlag}
+                />
+            )}
             {activeTab === 'assignedPickups' && <AssignedPickups setActiveTab={setActiveTab} />}
             {activeTab === 'completedReturns' && <CompletedCancelledRequests type="completed" />}
             {activeTab === 'cancelledReturns' && <CompletedCancelledRequests type="cancelled" />}
