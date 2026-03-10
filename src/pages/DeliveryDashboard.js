@@ -160,10 +160,13 @@ const DeliveryDashboard = () => {
                                     <p className="text-[13px] md:text-base"><strong>Address:</strong> {delivery.order?.shippingAddress?.address}, {delivery.order?.shippingAddress?.city}, {delivery.order?.shippingAddress?.postalCode}</p>
                                     <p className="text-[13px] md:text-base"><strong>Status:</strong> <span className="capitalize font-semibold text-blue-600">{delivery.status}</span></p>
                                 </div>
-                                <div className="mt-5 flex flex-row gap-2">
-                                    <button onClick={() => handleUpdateStatus(delivery, 'out for delivery')} className="flex-1 bg-blue-600 text-white px-1.5 py-2 rounded-lg hover:bg-blue-700 transition-colors text-[10px] md:text-sm font-semibold shadow-sm">Out Delivery</button>
-                                    <button onClick={() => handleUpdateStatus(delivery, 'delivered')} className="flex-1 bg-green-600 text-white px-1.5 py-2 rounded-lg hover:bg-green-700 transition-colors text-[10px] md:text-sm font-semibold shadow-sm">Delivered</button>
-                                    <button onClick={() => handleUpdateStatus(delivery, 'cancelled')} className="flex-1 bg-red-600 text-white px-1.5 py-2 rounded-lg hover:bg-red-700 transition-colors text-[10px] md:text-sm font-semibold shadow-sm">Cancel</button>
+                                <div className="mt-5 flex flex-row md:flex-wrap gap-2 md:gap-3">
+                                    <button onClick={() => handleUpdateStatus(delivery, 'out for delivery')} className="flex-1 md:flex-none md:min-w-[140px] bg-blue-600 text-white px-1.5 md:px-4 py-2 md:py-2.5 rounded-lg hover:bg-blue-700 transition-colors text-[10px] md:text-sm font-semibold shadow-sm">
+                                        <span className="md:hidden">Out Delivery</span>
+                                        <span className="hidden md:inline">Out for Delivery</span>
+                                    </button>
+                                    <button onClick={() => handleUpdateStatus(delivery, 'delivered')} className="flex-1 md:flex-none md:min-w-[140px] bg-green-600 text-white px-1.5 md:px-4 py-2 md:py-2.5 rounded-lg hover:bg-green-700 transition-colors text-[10px] md:text-sm font-semibold shadow-sm">Delivered</button>
+                                    <button onClick={() => handleUpdateStatus(delivery, 'cancelled')} className="flex-1 md:flex-none md:min-w-[140px] bg-red-600 text-white px-1.5 md:px-4 py-2 md:py-2.5 rounded-lg hover:bg-red-700 transition-colors text-[10px] md:text-sm font-semibold shadow-sm">Cancel</button>
                                 </div>
                             </div>
                         ))
@@ -191,7 +194,7 @@ const DeliveryDashboard = () => {
                                 <div className="mt-5">
                                     <button
                                         onClick={() => handlePickupStatusChange(pickup, 'received')}
-                                        className="w-full md:w-auto bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold text-xs shadow-sm"
+                                        className="w-full md:w-auto bg-green-600 text-white px-5 md:px-6 py-2 md:py-2.5 rounded-lg hover:bg-green-700 transition-colors font-semibold text-xs md:text-sm shadow-sm"
                                     >
                                         Mark as Received
                                     </button>
