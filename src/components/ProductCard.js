@@ -334,18 +334,21 @@ const ProductCard = ({ product }) => {
     setLocalWishlistOverride(!prevWishlistedState); // Optimistic Update
 
     try {
-      const token = localStorage.getItem("token");
-      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const pc = localStorage.getItem("selectedPincode");
 
       if (prevWishlistedState) {
-        await apiClient.delete(`/wishlist/${product._id}`, config);
+        await apiClient.delete(`/wishlist/${product._id}`, {
+          params: { pincode: pc }
+        });
       } else {
-        await apiClient.post(`/wishlist/${product._id}`, {}, config);
+        await apiClient.post(`/wishlist/${product._id}`, {
+          pincode: pc
+        });
         setHeartAnimation(true);
         setTimeout(() => setHeartAnimation(false), 800);
       }
 
-      await fetchWishlist();
+      await fetchWishlist(pc);
       setLocalWishlistOverride(null); // Clear override after successful sync
     } catch (err) {
       console.error("Wishlist error", err);

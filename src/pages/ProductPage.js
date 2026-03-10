@@ -254,15 +254,20 @@ const ProductPage = () => {
       if (isWishlistLoading) return;
       setIsWishlistLoading(true);
 
+      const pc = localStorage.getItem("selectedPincode");
       const previousWishlistState = isWishlisted;
       setIsWishlisted(!previousWishlistState); // Optimistic Update
 
       if (previousWishlistState) {
-        await apiClient.delete(`/wishlist/${product._id}`);
+        await apiClient.delete(`/wishlist/${product._id}`, {
+          params: { pincode: pc }
+        });
       } else {
-        await apiClient.post(`/wishlist/${product._id}`);
+        await apiClient.post(`/wishlist/${product._id}`, {
+          pincode: pc
+        });
       }
-      await fetchWishlist();
+      await fetchWishlist(pc);
 
       if (!previousWishlistState) { // Only animate when adding to wishlist
         setHeartAnimation(true);
