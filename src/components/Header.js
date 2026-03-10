@@ -11,6 +11,7 @@ import {
   HiOutlineLocationMarker,
 } from "react-icons/hi";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 import { useLocation } from "react-router-dom";
 import apiClient from "../services/apiClient";
 
@@ -18,15 +19,8 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const cartContext = useCart();
+  const { logout, user } = useAuth();
   const cartItems = cartContext?.cartItems || [];
-
-  const user = (() => {
-    try {
-      return JSON.parse(localStorage.getItem("user"));
-    } catch {
-      return null;
-    }
-  })();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -208,9 +202,8 @@ const Header = () => {
     }
   }, [cartItems.length]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+  const handleLogout = async () => {
+    await logout(); // Calls AuthContext logout which handles API and storage
     localStorage.removeItem("selectedPincode");
     sessionStorage.removeItem("pincodeModalShown");
     setPincode("");

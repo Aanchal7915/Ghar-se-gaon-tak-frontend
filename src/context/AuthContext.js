@@ -34,13 +34,16 @@ export const AuthProvider = ({ children }) => {
     await fetchWishlist();
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await apiClient.post("/auth/logout");
+    } catch (err) {
+      console.error("Logout error", err);
+    }
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setUser(null);
     setWishlist([]);
-    // ⚠️ No need to delete the header; apiClient's logic will stop sending it
-    // once the token is removed from localStorage.
   };
 
   const fetchWishlist = async () => {
