@@ -70,17 +70,17 @@ const CancelledOrders = ({ refreshFlag }) => {
     if (error) return <div className="text-center text-red-500 mt-10">{error}</div>;
 
     return (
-        <div className="p-6 bg-white shadow-md rounded-lg">
-            <h2 className="text-2xl font-semibold mb-4">Cancelled Orders</h2>
+        <div className="p-3 md:p-6 bg-white shadow-md rounded-lg">
+            <h2 className="text-xl md:text-2xl font-semibold mb-6">Cancelled Orders</h2>
 
-            <div className="flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 mb-4">
-                <div className="flex space-x-2">
-                    <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="p-2 border rounded-md">
+            <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 mb-6">
+                <div className="flex gap-2">
+                    <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="flex-1 md:flex-none p-2 border rounded-md text-sm">
                         {months.map(m => (
                             <option key={m.value} value={m.value}>{m.name}</option>
                         ))}
                     </select>
-                    <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="p-2 border rounded-md">
+                    <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} className="flex-1 md:flex-none p-2 border rounded-md text-sm">
                         {years.map(y => (
                             <option key={y} value={y}>{y}</option>
                         ))}
@@ -91,39 +91,44 @@ const CancelledOrders = ({ refreshFlag }) => {
                     placeholder="Search by name, order ID, or phone"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="p-2 border rounded-md w-full md:w-1/2"
+                    className="p-2 border rounded-md w-full md:w-1/2 text-sm"
                 />
             </div>
 
             <div className="space-y-4">
                 {filteredOrders.length > 0 ? (
                     filteredOrders.map(order => (
-                        <div key={order._id} className="bg-gray-100 rounded-lg p-4 flex justify-between items-start md:items-center flex-col md:flex-row">
-                            <div className="w-full md:w-1/2">
-                                <p><strong>Order ID:</strong> {order.orderNumber}</p>
-                                <p><strong>Customer:</strong> {order.user?.name}</p>
-                                <p><strong>Phone:</strong> {order.user?.phone || 'N/A'}</p>
-                                <p><strong>Email:</strong> {order.user?.email}</p>
-                                <p><strong>Address:</strong> {order.shippingAddress?.address}, {order.shippingAddress?.city}, {order.shippingAddress?.postalCode}</p>
-                                <p><strong>Assigned To:</strong> {order.assignedTo?.name || 'N/A'}</p>
-                                <p><strong>Cancelled On:</strong> {moment(order.updatedAt).format('MMMM Do YYYY, h:mm:ss a')}</p>
-                                <p><strong>Total Price:</strong> ₹{order.totalPrice}</p>
+                        <div key={order._id} className="bg-gray-50 border border-gray-100 rounded-lg p-4 md:p-6 flex flex-col lg:flex-row justify-between items-start gap-6">
+                            <div className="w-full lg:w-3/5 space-y-1">
+                                <p className="text-sm md:text-base"><strong>Order ID:</strong> <span className="text-blue-600 font-semibold">{order.orderNumber}</span></p>
+                                <p className="text-sm md:text-base"><strong>Customer:</strong> {order.user?.name}</p>
+                                <p className="text-sm md:text-base"><strong>Phone:</strong> {order.user?.phone || 'N/A'}</p>
+                                <p className="text-sm md:text-base"><strong>Email:</strong> {order.user?.email}</p>
+                                <p className="text-sm md:text-base"><strong>Address:</strong> {order.shippingAddress?.address}, {order.shippingAddress?.city}, {order.shippingAddress?.postalCode}</p>
+                                <p className="text-sm md:text-base"><strong>Assigned To:</strong> {order.assignedTo?.name || 'N/A'}</p>
+                                <p className="text-sm md:text-base"><strong>Cancelled On:</strong> {moment(order.updatedAt).format('MMMM Do YYYY, h:mm:ss a')}</p>
+                                <p className="text-sm md:text-base"><strong>Total Price:</strong> <span className="font-bold text-red-600">₹{order.totalPrice}</span></p>
                             </div>
 
-                            <div className="w-full md:w-1/2 flex items-center justify-end md:justify-end mt-4 md:mt-0 space-x-4">
-                                <div className="flex flex-col items-end">
-                                    <p className="font-semibold">Original Product:</p>
+                            <div className="w-full lg:w-2/5 flex flex-col md:flex-row lg:flex-col justify-between items-start md:items-center lg:items-end gap-6">
+                                <div className="w-full flex flex-col items-start md:items-end">
+                                    <p className="font-semibold text-sm mb-3">Original Product:</p>
                                     {order.orderItems?.[0]?.product?.images?.[0] ? (
                                         <img
                                             src={order.orderItems[0].product.images[0]}
                                             alt="Original Product"
-                                            className="w-24 h-24 object-cover rounded mt-2"
+                                            className="w-20 h-20 md:w-24 md:h-24 object-cover rounded mt-2 border border-gray-100 shadow-sm"
                                         />
                                     ) : (
-                                        <p className="text-gray-500 text-sm mt-2">Image not available</p>
+                                        <p className="text-gray-400 text-xs italic mt-2">Image not available</p>
                                     )}
                                 </div>
-                                <button onClick={() => handleRevertStatus(order._id)} className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 self-start md:self-auto">Revert</button>
+                                <button
+                                    onClick={() => handleRevertStatus(order._id)}
+                                    className="w-full md:w-auto bg-red-500 text-white px-6 py-2 rounded-md hover:bg-red-600 transition-colors shadow-sm text-sm font-semibold"
+                                >
+                                    Revert
+                                </button>
                             </div>
                         </div>
                     ))

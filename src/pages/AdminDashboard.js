@@ -134,69 +134,65 @@ const AdminDashboard = () => {
         <div className="container mx-auto px-4 py-8">
             <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
             <div className="border-b border-gray-200 mb-6">
-                <nav className="-mb-px flex space-x-8 overflow-x-auto">
-                    <button onClick={() => setActiveTab('unassignedOrders')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'unassignedOrders' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Unassigned Deliveries</button>
-                    <button onClick={() => setActiveTab('assignedOrders')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'assignedOrders' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Assigned Deliveries</button>
-                    <button onClick={() => setActiveTab('products')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'products' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Products</button>
-                    <button onClick={() => setActiveTab('users')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'users' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Users</button>
-                    <button onClick={() => setActiveTab('createUser')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'createUser' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Create User</button>
-                    <button onClick={() => setActiveTab('analytics')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'analytics' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Analytics</button>
-                    <button onClick={() => setActiveTab('completedOrders')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'completedOrders' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Completed</button>
-                    <button onClick={() => setActiveTab('cancelledOrders')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'cancelledOrders' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Cancelled</button>
-                    <button onClick={() => setActiveTab('pendingReturns')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'pendingReturns' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Return Requests</button>
-                    <button onClick={() => setActiveTab('assignedPickups')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'assignedPickups' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Pickup Tasks</button>
-                    <button onClick={() => setActiveTab('completedReturns')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'completedReturns' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Completed Returns</button>
-                    <button onClick={() => setActiveTab('cancelledReturns')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'cancelledReturns' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Cancelled Returns</button>
-                    <button onClick={() => setActiveTab('appointments')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'appointments' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Appointments</button>
-                    <button onClick={() => setActiveTab('franchise')} className={`py-4 px-1 border-b-2 font-medium ${activeTab === 'franchise' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Franchise</button>
+                <nav className="-mb-px flex space-x-4 md:space-x-8 overflow-x-auto whitespace-nowrap pb-2">
+                    <button onClick={() => setActiveTab('unassignedOrders')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'unassignedOrders' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Unassigned Deliveries</button>
+                    <button onClick={() => setActiveTab('assignedOrders')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'assignedOrders' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Assigned Deliveries</button>
+                    <button onClick={() => setActiveTab('products')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'products' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Products</button>
+                    <button onClick={() => setActiveTab('users')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'users' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Users</button>
+                    <button onClick={() => setActiveTab('createUser')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'createUser' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Create User</button>
+                    <button onClick={() => setActiveTab('analytics')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'analytics' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Analytics</button>
+                    <button onClick={() => setActiveTab('completedOrders')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'completedOrders' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Completed</button>
+                    <button onClick={() => setActiveTab('cancelledOrders')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'cancelledOrders' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Cancelled</button>
+                    <button onClick={() => setActiveTab('pendingReturns')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'pendingReturns' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Return Requests</button>
+                    <button onClick={() => setActiveTab('assignedPickups')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'assignedPickups' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Pickup Tasks</button>
+                    <button onClick={() => setActiveTab('completedReturns')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'completedReturns' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Completed Returns</button>
+                    <button onClick={() => setActiveTab('cancelledReturns')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'cancelledReturns' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Cancelled Returns</button>
+                    <button onClick={() => setActiveTab('appointments')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'appointments' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Appointments</button>
+                    <button onClick={() => setActiveTab('franchise')} className={`py-4 px-1 border-b-2 font-medium text-sm md:text-base ${activeTab === 'franchise' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}>Franchise</button>
 
                 </nav>
             </div>
 
             {activeTab === 'unassignedOrders' && (
                 <div>
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
                         <h2 className="text-2xl font-semibold">Unassigned Deliveries</h2>
                         <input
                             type="text"
                             placeholder="Search orders..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="p-2 border rounded-md"
+                            className="w-full md:w-auto p-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
                         />
                     </div>
                     <div className="space-y-4">
                         {filteredUnassigned.length > 0 ? filteredUnassigned.map(order => (
                             <div key={order._id} className="bg-white rounded-lg shadow-md p-6 flex justify-between items-start flex-col md:flex-row">
-                                <div className="w-full md:w-1/2">
-                                    <p><strong>Order ID:</strong> {order.orderNumber}</p>
-                                    <p><strong>Customer:</strong> {order.customerInfo?.name}</p>
-                                    <p><strong>Phone:</strong> {order.customerInfo?.phone || 'N/A'}</p>
-
-
-                                    <p><strong>Email:</strong> {order.user?.email}</p>
-
-                                    {/* <p><strong>Phone:</strong> {order.customerInfo?.phone || 'N/A'}</p> */}
-                                    <p><strong>Address:</strong> {order.shippingAddress?.address}, {order.shippingAddress?.city} {order.shippingAddress?.postalCode}</p>
-                                    <p><strong>Total Price:</strong> ₹{order.totalPrice}</p>
+                                <div className="w-full md:w-1/2 space-y-2">
+                                    <p className="text-sm md:text-base"><strong>Order ID:</strong> {order.orderNumber}</p>
+                                    <p className="text-sm md:text-base"><strong>Customer:</strong> {order.customerInfo?.name}</p>
+                                    <p className="text-sm md:text-base"><strong>Phone:</strong> {order.customerInfo?.phone || 'N/A'}</p>
+                                    <p className="text-sm md:text-base"><strong>Email:</strong> {order.user?.email}</p>
+                                    <p className="text-sm md:text-base"><strong>Address:</strong> {order.shippingAddress?.address}, {order.shippingAddress?.city} {order.shippingAddress?.postalCode}</p>
+                                    <p className="text-sm md:text-base"><strong>Total Price:</strong> ₹{order.totalPrice}</p>
                                 </div>
-                                <div className="w-full md:w-1/2 flex items-center justify-end md:justify-end mt-4 md:mt-0 space-x-4">
-                                    <div className="flex flex-col items-end">
-                                        <p className="font-semibold">Products:</p>
-                                        <div className="space-y-2 mt-2">
+                                <div className="w-full md:w-1/2 flex flex-col items-start md:items-end mt-6 md:mt-0 space-y-4">
+                                    <div className="w-full flex flex-col items-start md:items-end">
+                                        <p className="font-semibold text-sm md:text-base">Products:</p>
+                                        <div className="w-full space-y-2 mt-2">
                                             {order.orderItems.map((item) => (
-                                                <div key={item._id} className="flex items-center space-x-2">
+                                                <div key={item._id} className="flex items-center space-x-3 bg-gray-50 p-2 rounded-md md:bg-transparent md:p-0 md:justify-end">
                                                     <img
                                                         src={item.product?.images?.[0]}
                                                         alt={item.name}
-                                                        className="w-16 h-16 object-cover rounded"
+                                                        className="w-12 h-12 md:w-16 md:h-16 object-cover rounded shadow-sm"
                                                     />
-                                                    <p className="text-sm">{item.name} (Pack: {item.size})</p>
+                                                    <p className="text-xs md:text-sm font-medium">{item.name} <span className="text-gray-500">(Pack: {item.size})</span></p>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
-                                    <button onClick={() => handleAssignClick(order)} className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 self-start md:self-auto">Assign</button>
+                                    <button onClick={() => handleAssignClick(order)} className="w-full md:w-auto bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors shadow-md">Assign</button>
                                 </div>
                             </div>
                         )) : <p>No unassigned orders found.</p>}
@@ -206,48 +202,48 @@ const AdminDashboard = () => {
 
             {activeTab === 'assignedOrders' && (
                 <div>
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
                         <h2 className="text-2xl font-semibold">Assigned Deliveries</h2>
                         <input
                             type="text"
                             placeholder="Search orders..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="p-2 border rounded-md"
+                            className="w-full md:w-auto p-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
                         />
                     </div>
                     <div className="space-y-4">
                         {filteredAssigned.length > 0 ? filteredAssigned.map(order => (
                             <div key={order._id} className="bg-white rounded-lg shadow-md p-6 flex justify-between items-start flex-col md:flex-row">
-                                <div className="w-full md:w-1/2">
-                                    <p><strong>Order ID:</strong> {order.orderNumber}</p>
-                                    <p><strong>Customer:</strong> {order.customerInfo?.name} ({order.user?.email})</p>
-                                    <p><strong>Phone:</strong> {order.customerInfo?.phone || 'N/A'}</p>
-                                    <p><strong>Address:</strong> {order.shippingAddress?.address}, {order.shippingAddress?.city} {order.shippingAddress?.postalCode}</p>
-                                    <p><strong>Assigned To:</strong> {order.assignedTo?.name} ({order.assignedTo?.email})</p>
-                                    <p><strong>Status:</strong> <span className="capitalize">{order.status}</span></p>
-                                    <p><strong>Total Price:</strong> ₹{order.totalPrice}</p>
+                                <div className="w-full md:w-1/2 space-y-2">
+                                    <p className="text-sm md:text-base"><strong>Order ID:</strong> {order.orderNumber}</p>
+                                    <p className="text-sm md:text-base"><strong>Customer:</strong> {order.customerInfo?.name} ({order.user?.email})</p>
+                                    <p className="text-sm md:text-base"><strong>Phone:</strong> {order.customerInfo?.phone || 'N/A'}</p>
+                                    <p className="text-sm md:text-base"><strong>Address:</strong> {order.shippingAddress?.address}, {order.shippingAddress?.city} {order.shippingAddress?.postalCode}</p>
+                                    <p className="text-sm md:text-base"><strong>Assigned To:</strong> {order.assignedTo?.name} ({order.assignedTo?.email})</p>
+                                    <p className="text-sm md:text-base"><strong>Status:</strong> <span className="capitalize font-semibold text-blue-600">{order.status}</span></p>
+                                    <p className="text-sm md:text-base"><strong>Total Price:</strong> ₹{order.totalPrice}</p>
                                 </div>
-                                <div className="w-full md:w-1/2 flex items-center justify-end md:justify-end mt-4 md:mt-0 space-x-4">
-                                    <div className="flex flex-col items-end">
-                                        <p className="font-semibold">Products:</p>
-                                        <div className="space-y-2 mt-2">
+                                <div className="w-full md:w-1/2 flex flex-col items-start md:items-end mt-6 md:mt-0 space-y-4">
+                                    <div className="w-full flex flex-col items-start md:items-end">
+                                        <p className="font-semibold text-sm md:text-base">Products:</p>
+                                        <div className="w-full space-y-2 mt-2">
                                             {order.orderItems.map((item) => (
-                                                <div key={item._id} className="flex items-center space-x-2">
+                                                <div key={item._id} className="flex items-center space-x-3 bg-gray-50 p-2 rounded-md md:bg-transparent md:p-0 md:justify-end">
                                                     <img
                                                         src={item.product?.images?.[0]}
                                                         alt={item.name}
-                                                        className="w-16 h-16 object-cover rounded"
+                                                        className="w-12 h-12 md:w-16 md:h-16 object-cover rounded shadow-sm"
                                                     />
-                                                    <p className="text-sm">{item.name} (Pack: {item.size})</p>
+                                                    <p className="text-xs md:text-sm font-medium">{item.name} <span className="text-gray-500">(Pack: {item.size})</span></p>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="flex space-x-2 mt-4 md:mt-0">
-                                        <button onClick={() => handleAdminStatusChange(order._id, 'delivered')} className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">Complete</button>
-                                        <button onClick={() => handleAdminStatusChange(order._id, 'cancelled')} className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700">Cancel</button>
-                                        <button onClick={() => handleAssignClick(order)} className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600">Reassign</button>
+                                    <div className="flex flex-wrap gap-2 w-full md:justify-end">
+                                        <button onClick={() => handleAdminStatusChange(order._id, 'delivered')} className="flex-1 md:flex-none bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors shadow-sm">Complete</button>
+                                        <button onClick={() => handleAdminStatusChange(order._id, 'cancelled')} className="flex-1 md:flex-none bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors shadow-sm">Cancel</button>
+                                        <button onClick={() => handleAssignClick(order)} className="flex-1 md:flex-none bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 transition-colors shadow-sm">Reassign</button>
                                     </div>
                                 </div>
                             </div>

@@ -54,32 +54,34 @@ const CompletedCancelledRequests = ({ type }) => {
     if (error) return <div className="text-center text-red-500 mt-10">{error}</div>;
 
     return (
-        <div>
-            <h2 className="text-2xl font-bold mb-6 capitalize text-gray-800 border-b pb-2">{type} Requests</h2>
-            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
-                <input
-                    type="number"
-                    placeholder="Year"
-                    value={filterYear}
-                    onChange={(e) => setFilterYear(e.target.value)}
-                    className="p-2 border rounded shadow-sm focus:ring-2 focus:ring-indigo-500"
-                />
-                <select
-                    value={filterMonth}
-                    onChange={(e) => setFilterMonth(e.target.value)}
-                    className="p-2 border rounded shadow-sm focus:ring-2 focus:ring-indigo-500"
-                >
-                    <option value="">Select Month</option>
-                    {moment.months().map((month, index) => (
-                        <option key={index} value={index + 1}>{month}</option>
-                    ))}
-                </select>
+        <div className="p-3 md:p-0">
+            <h2 className="text-xl md:text-2xl font-bold mb-6 capitalize text-gray-800 border-b pb-2">{type} Requests</h2>
+            <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 mb-8">
+                <div className="flex gap-2">
+                    <input
+                        type="number"
+                        placeholder="Year"
+                        value={filterYear}
+                        onChange={(e) => setFilterYear(e.target.value)}
+                        className="flex-1 md:w-32 p-2 border rounded shadow-sm focus:ring-2 focus:ring-indigo-500 text-sm"
+                    />
+                    <select
+                        value={filterMonth}
+                        onChange={(e) => setFilterMonth(e.target.value)}
+                        className="flex-1 md:w-48 p-2 border rounded shadow-sm focus:ring-2 focus:ring-indigo-500 text-sm"
+                    >
+                        <option value="">Select Month</option>
+                        {moment.months().map((month, index) => (
+                            <option key={index} value={index + 1}>{month}</option>
+                        ))}
+                    </select>
+                </div>
                 <input
                     type="text"
                     placeholder="Search by name, order ID, or phone"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="p-2 border rounded w-full sm:w-80 shadow-sm focus:ring-2 focus:ring-indigo-500"
+                    className="p-2 border rounded w-full md:flex-grow shadow-sm focus:ring-2 focus:ring-indigo-500 text-sm"
                 />
             </div>
             <div className="space-y-6">

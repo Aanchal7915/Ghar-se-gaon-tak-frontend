@@ -119,19 +119,21 @@ const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab, setRefreshFlag 
     if (error) return <div className="text-center text-red-500 mt-10">{error}</div>;
 
     return (
-        <div>
-            <h2 className="text-2xl font-semibold mb-4">Pending Return & Replacement Requests</h2>
+        <div className="p-3 md:p-0">
+            <h2 className="text-xl md:text-2xl font-semibold mb-6">Pending Return & Replacement Requests</h2>
             <div className="space-y-4">
                 {requests.length > 0 ? (
                     requests.map(request => (
                         <div key={request._id} className="bg-white rounded-lg shadow-md p-6">
-                            <p><strong>Request ID:</strong> {request._id}</p>
-                            <p><strong>Order Number:</strong> {request.order?.orderNumber}</p>
-                            <p><strong>Customer:</strong> {request.user?.name} ({request.user?.phone})</p>
-                            <p><strong>Email:</strong> {request.user?.email}</p>
-                            <p><strong>Address:</strong> {request.order?.shippingAddress?.address}, {request.order?.shippingAddress?.city}, {request.order?.shippingAddress?.postalCode}</p>
+                            <div className="space-y-2">
+                                <p className="text-sm md:text-base"><strong>Request ID:</strong> {request._id}</p>
+                                <p className="text-sm md:text-base"><strong>Order Number:</strong> {request.order?.orderNumber}</p>
+                                <p className="text-sm md:text-base"><strong>Customer:</strong> {request.user?.name} ({request.user?.phone})</p>
+                                <p className="text-sm md:text-base"><strong>Email:</strong> {request.user?.email}</p>
+                                <p className="text-sm md:text-base"><strong>Address:</strong> {request.order?.shippingAddress?.address}, {request.order?.shippingAddress?.city}, {request.order?.shippingAddress?.postalCode}</p>
 
-                            <p><strong>Type:</strong> <span className="capitalize">{request.type}</span></p>
+                                <p className="text-sm md:text-base"><strong>Type:</strong> <span className="capitalize font-semibold text-blue-600">{request.type}</span></p>
+                            </div>
                             <div className="flex items-center space-x-4 my-3 p-3 bg-gray-50 rounded-lg">
                                 {request.originalItem?.product?.images?.[0] ? (
                                     <img
@@ -148,13 +150,13 @@ const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab, setRefreshFlag 
                                     <p className="text-sm font-bold text-indigo-600 font-sans">₹{request.originalItem?.price}</p>
                                 </div>
                             </div>
-                            <p><strong>Reason:</strong> {request.reason}</p>
-                            <p><strong>Status:</strong> <span className="capitalize">{request.status}</span></p>
-                            <div className="mt-4 flex space-x-2">
+                            <p className="text-sm md:text-base"><strong>Reason:</strong> {request.reason}</p>
+                            <p className="text-sm md:text-base"><strong>Status:</strong> <span className="capitalize font-semibold">{request.status}</span></p>
+                            <div className="mt-6 flex flex-wrap gap-3">
                                 {request.status === 'pending' && (
                                     <button
                                         onClick={() => handleApproveRequest(request._id)}
-                                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                                        className="flex-1 md:flex-none bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition-colors shadow-sm text-sm"
                                     >
                                         Approve Request
                                     </button>
@@ -162,7 +164,7 @@ const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab, setRefreshFlag 
                                 {request.status === 'approved' && (
                                     <button
                                         onClick={() => handleAssignPickupClick(request)}
-                                        className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                                        className="flex-1 md:flex-none bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition-colors shadow-sm text-sm"
                                     >
                                         Assign for Pickup
                                     </button>
@@ -170,7 +172,7 @@ const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab, setRefreshFlag 
                                 {(request.status === 'pending' || request.status === 'approved') && (
                                     <button
                                         onClick={() => handleRejectRequest(request._id)}
-                                        className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                                        className="flex-1 md:flex-none bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors shadow-sm text-sm"
                                     >
                                         Reject Request
                                     </button>

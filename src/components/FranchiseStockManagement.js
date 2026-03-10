@@ -93,7 +93,7 @@ const FranchiseStockManagement = () => {
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                        <h1 className="text-xl md:text-2xl font-bold text-gray-800 flex items-center gap-2">
                             <FaMapMarkerAlt className="text-red-500" />
                             Franchise & Location Inventory
                         </h1>

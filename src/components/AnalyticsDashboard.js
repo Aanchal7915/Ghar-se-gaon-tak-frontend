@@ -400,7 +400,7 @@ const AnalyticsDashboard = () => {
             <div className="mb-6 flex flex-col md:flex-row justify-between items-start gap-4">
                 <div>
                     <button className="flex items-center gap-2 text-[10px] font-black text-gray-500 hover:text-gray-900 border border-gray-200 px-3 py-1.5 rounded-lg bg-white shadow-sm mb-3 transition-all">
-                        ← Back
+                        Back
                     </button>
                     <h1 className="text-2xl md:text-3xl lg:text-4xl font-black text-gray-900 tracking-tight leading-tight">Analytics Dashboard</h1>
                     <p className="text-gray-500 font-medium text-xs md:text-sm lg:text-lg">Understand store growth, product trends, and real-time performance.</p>
@@ -418,13 +418,13 @@ const AnalyticsDashboard = () => {
                 <div className="flex flex-col lg:flex-row items-center gap-4">
                     {/* Search Bar */}
                     <div className="relative flex-grow w-full">
-                        <span className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-gray-400 text-base md:text-lg">🔍</span>
+                        <span className="absolute left-4 md:left-5 top-1/2 -translate-y-1/2 text-gray-400 text-sm md:text-base font-bold">Search</span>
                         <input
                             type="text"
                             placeholder="Search by product name..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-12 md:pl-14 pr-4 md:pr-6 py-3 md:py-4 bg-gray-50 border border-gray-100 rounded-xl md:rounded-2xl text-xs md:text-sm font-bold focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 outline-none transition-all placeholder:text-gray-400"
+                            className="w-full pl-16 md:pl-20 pr-4 md:pr-6 py-3 md:py-4 bg-gray-50 border border-gray-100 rounded-xl md:rounded-2xl text-xs md:text-sm font-bold focus:bg-white focus:ring-4 focus:ring-green-500/10 focus:border-green-500 outline-none transition-all placeholder:text-gray-400"
                         />
                     </div>
 
@@ -494,7 +494,7 @@ const AnalyticsDashboard = () => {
                                             onChange={(e) => setCustomRange({ ...customRange, start: e.target.value })}
                                             className="bg-transparent border-none p-0 focus:ring-0 cursor-pointer text-[11px] font-black w-[100px]"
                                         />
-                                        <span className="text-gray-300">→</span>
+                                        <span className="text-gray-300">to</span>
                                         <input
                                             type="date"
                                             value={customRange.end}

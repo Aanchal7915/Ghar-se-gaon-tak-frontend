@@ -32,8 +32,8 @@ const CreateUser = ({ onUserCreated }) => {
   };
 
   return (
-    <div className="p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-bold mb-4">Create New User Account</h2>
+    <div className="p-4 md:p-6 bg-white shadow-md rounded-lg">
+      <h2 className="text-xl md:text-2xl font-bold mb-4">Create New User Account</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Full Name" className="w-full p-2 border rounded-md" required />
         <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" className="w-full p-2 border rounded-md" required />

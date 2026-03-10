@@ -147,9 +147,9 @@ const UserManagement = ({ onUserListUpdated }) => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      console.log("🔍 Fetching users from /users...");
+      console.log("Fetching users from /users...");
       const response = await apiClient.get("/users");
-      console.log("✅ Users fetched:", response.data);
+      console.log("Users fetched:", response.data);
 
       setUsers(response.data);
 
@@ -160,7 +160,7 @@ const UserManagement = ({ onUserListUpdated }) => {
       }
     } catch (error) {
       console.error(
-        "❌ Failed to fetch users:",
+        "Failed to fetch users:",
         error.response?.data?.message || error.message
       );
     } finally {
@@ -197,12 +197,12 @@ const UserManagement = ({ onUserListUpdated }) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
 
     try {
-      console.log(`🗑️ Deleting user ${userId}...`);
+      console.log(`Deleting user ${userId}...`);
       await apiClient.delete(`/users/${userId}`);
       alert("User deleted successfully!");
       fetchUsers();
     } catch (error) {
-      console.error("❌ Failed to delete user:", error);
+      console.error("Failed to delete user:", error);
       alert("Failed to delete user.");
     }
   };
@@ -210,44 +210,44 @@ const UserManagement = ({ onUserListUpdated }) => {
   if (loading) return <div className="text-center mt-10">Loading users...</div>;
 
   return (
-    <div className="p-6 bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-bold mb-4">User Management</h2>
+    <div className="p-3 md:p-6 bg-white shadow-md rounded-lg">
+      <h2 className="text-xl md:text-2xl font-bold mb-4">User Management</h2>
 
       {/* Filter + Search */}
       <div className="mb-6">
-        <div className="flex space-x-4 mb-4">
+        <div className="flex flex-wrap gap-2 mb-4">
           <button
             onClick={() => setActiveFilter("all")}
-            className={`py-2 px-4 rounded-md ${activeFilter === "all"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-800"
+            className={`py-2 px-4 rounded-md text-sm md:text-base ${activeFilter === "all"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 text-gray-800"
               }`}
           >
             All ({users.length})
           </button>
           <button
             onClick={() => setActiveFilter("customer")}
-            className={`py-2 px-4 rounded-md ${activeFilter === "customer"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-800"
+            className={`py-2 px-4 rounded-md text-sm md:text-base ${activeFilter === "customer"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 text-gray-800"
               }`}
           >
             Customers ({users.filter((u) => u.role === "customer").length})
           </button>
           <button
             onClick={() => setActiveFilter("delivery")}
-            className={`py-2 px-4 rounded-md ${activeFilter === "delivery"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-800"
+            className={`py-2 px-4 rounded-md text-sm md:text-base ${activeFilter === "delivery"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 text-gray-800"
               }`}
           >
             Delivery ({users.filter((u) => u.role === "delivery").length})
           </button>
           <button
             onClick={() => setActiveFilter("admin")}
-            className={`py-2 px-4 rounded-md ${activeFilter === "admin"
-                ? "bg-blue-600 text-white"
-                : "bg-gray-200 text-gray-800"
+            className={`py-2 px-4 rounded-md text-sm md:text-base ${activeFilter === "admin"
+              ? "bg-blue-600 text-white"
+              : "bg-gray-200 text-gray-800"
               }`}
           >
             Admins ({users.filter((u) => u.role === "admin").length})
@@ -269,10 +269,10 @@ const UserManagement = ({ onUserListUpdated }) => {
           filteredUsers.map((user) => (
             <div
               key={user._id}
-              className="flex justify-between items-center p-4 bg-gray-100 rounded-md"
+              className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-gray-100 rounded-md gap-4"
             >
-              <div>
-                <p className="font-semibold">{user.name}</p>
+              <div className="w-full">
+                <p className="font-semibold text-base md:text-lg">{user.name}</p>
                 <span className="text-sm text-gray-500 capitalize">
                   {user.email} | {user.role}
                 </span>
@@ -282,7 +282,7 @@ const UserManagement = ({ onUserListUpdated }) => {
               </div>
               <button
                 onClick={() => handleDeleteUser(user._id)}
-                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700"
+                className="w-full md:w-auto bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors"
               >
                 Delete
               </button>
