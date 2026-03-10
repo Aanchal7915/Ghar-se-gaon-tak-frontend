@@ -375,6 +375,7 @@ const MyOrdersPage = () => {
 
     const [availableSizes, setAvailableSizes] = useState([]);
     const [selectedSize, setSelectedSize] = useState('');
+    const [submitting, setSubmitting] = useState(false);
 
     const fetchMyOrdersAndRequests = async () => {
         try {
@@ -441,6 +442,7 @@ const MyOrdersPage = () => {
 
     const handleRequestSubmit = async (e) => {
         e.preventDefault();
+        setSubmitting(true);
         try {
             const token = localStorage.getItem('token');
             const payload = {
@@ -495,6 +497,8 @@ const MyOrdersPage = () => {
             fetchMyOrdersAndRequests();
         } catch (err) {
             setRequestMessage(err.response?.data?.message || 'Failed to submit request.');
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -793,9 +797,17 @@ const MyOrdersPage = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="bg-indigo-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-indigo-700 transition-colors"
+                                    disabled={submitting}
+                                    className={`bg-indigo-600 text-white px-6 py-3 rounded-md font-semibold hover:bg-indigo-700 transition-colors flex items-center gap-2 ${submitting ? 'opacity-70 cursor-not-allowed' : ''}`}
                                 >
-                                    Submit Request
+                                    {submitting ? (
+                                        <>
+                                            <FaSpinner className="animate-spin" />
+                                            Submitting...
+                                        </>
+                                    ) : (
+                                        'Submit Request'
+                                    )}
                                 </button>
                             </div>
                         </form>

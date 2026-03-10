@@ -122,7 +122,7 @@ const AdminDashboard = () => {
             alert('Status updated successfully!');
             setRefreshFlag(prev => !prev);
         } catch (err) {
-            setError('Failed to update status.');
+            alert(err.response?.data?.message || 'Failed to update status.');
             console.error(err);
         }
     };

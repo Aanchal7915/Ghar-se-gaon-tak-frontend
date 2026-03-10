@@ -12,7 +12,6 @@ const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab, setRefreshFlag 
     const [error, setError] = useState(null);
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [requestToAssign, setRequestToAssign] = useState(null);
-    const [selectedPartner, setSelectedPartner] = useState('');
 
     const fetchPendingRequests = async () => {
         setLoading(true);
@@ -38,21 +37,16 @@ const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab, setRefreshFlag 
     };
 
     const handleAssignPickup = async () => {
-        if (!selectedPartner) {
-            alert('Please select a delivery partner.');
-            return;
-        }
         try {
             const token = localStorage.getItem('token');
             await apiClient.post(
                 '/return-replace/admin/assign-pickup',
-                { requestId: requestToAssign._id, deliveryPersonId: selectedPartner },
+                { requestId: requestToAssign._id },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             alert('Pickup assigned successfully!');
             setShowAssignModal(false);
             setRequestToAssign(null);
-            setSelectedPartner('');
             fetchPendingRequests();
         } catch (err) {
             alert('Failed to assign pickup.');
@@ -167,7 +161,7 @@ const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab, setRefreshFlag 
                                 )}
                                 {request.status === 'approved' && (
                                     <button
-                                        onClick={() => handleMoveToUnassigned(request._id)}
+                                        onClick={() => handleAssignPickupClick(request)}
                                         className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
                                     >
                                         Assign for Pickup
@@ -193,17 +187,8 @@ const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab, setRefreshFlag 
             {showAssignModal && (
                 <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
                     <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-sm">
-                        <h3 className="text-xl font-bold mb-4">Assign Pickup to Delivery Partner</h3>
+                        <h3 className="text-xl font-bold mb-4">Assign Pickup</h3>
                         <p className="mb-2"><strong>Request Type:</strong> <span className="capitalize">{requestToAssign.type}</span></p>
-                        <select
-                            onChange={(e) => setSelectedPartner(e.target.value)}
-                            className="w-full p-2 border rounded-md"
-                        >
-                            <option value="">Select Delivery Partner</option>
-                            {deliveryPartners.map(partner => (
-                                <option key={partner._id} value={partner._id}>{partner.name} ({partner.email})</option>
-                            ))}
-                        </select>
                         <div className="mt-6 flex justify-between space-x-4">
                             <button
                                 type="button"
@@ -216,7 +201,6 @@ const ReturnReplaceRequests = ({ deliveryPartners, setActiveTab, setRefreshFlag 
                                 type="button"
                                 onClick={handleAssignPickup}
                                 className="bg-green-600 text-white px-4 py-2 rounded-md"
-                                disabled={!selectedPartner}
                             >
                                 Confirm Assign
                             </button>

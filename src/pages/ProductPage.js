@@ -24,6 +24,7 @@ const ProductPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
+  const userSelectedVariantRef = React.useRef(false); // tracks if user manually picked a variant
   const [similarProducts, setSimilarProducts] = useState([]);
   const { addToCart } = useCart();
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ const ProductPage = () => {
   const isAuthenticated = Boolean(user || localStorage.getItem("token"));
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [heartAnimation, setHeartAnimation] = useState(false);
+  const [isWishlistLoading, setIsWishlistLoading] = useState(false);
 
   const [dynamicRating, setDynamicRating] = useState(null);
   const [isZoomed, setIsZoomed] = useState(false); // desktop hover zoom
@@ -51,25 +53,49 @@ const ProductPage = () => {
     }
   }, [selectedPincode]);
 
-  // Merge variants from global list and pincode rules
+  const normalizeSize = (size) => size ? size.toLowerCase().replace(/\([^)]*\)/g, '').replace(/[^a-z0-9]/g, '').trim() : '';
+
+  // Pincode-aware variant resolution:
+  // - If a 6-digit pincode is entered → show ONLY sizes set up for that pincode in pincodePricing
+  // - If no pincode → show sizes from product.variants (global catalog)
+  // This ensures exactly what the admin set in the backend is what the user sees.
   const availableVariants = React.useMemo(() => {
     if (!product) return [];
-    const vars = [...(product.variants || [])];
-    const pincodeSizes = [...new Set((product.pincodePricing || []).map(p => p.size))].filter(Boolean);
 
-    pincodeSizes.forEach(size => {
-      if (!vars.find(v => v.size === size)) {
-        vars.push({
-          size,
-          price: null,
-          originalPrice: null,
-          countInStock: 0,
-          _id: `pincode-${size}`
+    if (selectedPincode.length === 6) {
+      // Get all pincode pricing entries for this specific pincode
+      const pincodeEntries = (product.pincodePricing || []).filter(
+        p => p.pincode === selectedPincode.trim() && p.size
+      );
+
+      if (pincodeEntries.length > 0) {
+        const seen = new Map();
+        pincodeEntries.forEach(p => {
+          const normSize = normalizeSize(p.size);
+          if (!seen.has(normSize)) {
+            // Try to enrich with matching product.variant data (e.g. _id)
+            const matchingVariant = (product.variants || []).find(
+              v => normalizeSize(v.size) === normSize
+            );
+            seen.set(normSize, {
+              ...(matchingVariant || {}),
+              size: p.size, // use the size label from pincodePricing
+              price: Number(p.price),
+              originalPrice: p.originalPrice ? Number(p.originalPrice) : null,
+              countInStock: Number(p.inventory),
+              _id: matchingVariant?._id || `pincode-${p.size}`,
+            });
+          }
         });
+        return Array.from(seen.values());
       }
-    });
-    return vars;
-  }, [product]);
+      // Pincode exists but no entries — show nothing (will show unavailable)
+      return [];
+    }
+
+    // No pincode — fall back to product.variants
+    return [...(product.variants || []).map(v => ({ ...v }))];
+  }, [product, selectedPincode]);
 
   const isNewArrival = (creationTime) => {
     const oneDay = 24 * 60 * 60 * 1000;
@@ -139,24 +165,20 @@ const ProductPage = () => {
     setIsWishlisted(isInWishlist);
   }, [id, user, wishlist]);
 
-  // Handle auto-selecting variant based on pincode and availability
+  // When pincode changes reset manual-selection flag so auto-select can pick the right variant for the new context
   useEffect(() => {
-    if (product && availableVariants.length > 0) {
-      const bestVariant = availableVariants.find(v => {
-        const rule = selectedPincode.length === 6
-          ? product.pincodePricing?.find(p => p.pincode === selectedPincode.trim() && p.size === v.size)
-          : null;
-        const stock = rule ? Number(rule.inventory) : 0;
-        return stock > 0;
-      });
+    userSelectedVariantRef.current = false;
+    setSelectedVariant(null);
+  }, [selectedPincode]);
 
-      if (bestVariant) {
-        setSelectedVariant(bestVariant);
-      } else if (!selectedVariant) {
-        setSelectedVariant(availableVariants[0]);
-      }
+  // Auto-select the first/best variant whenever availableVariants changes (product load or pincode change)
+  useEffect(() => {
+    if (availableVariants.length > 0 && !userSelectedVariantRef.current) {
+      // Pick the first variant with stock, or just the first one
+      const best = availableVariants.find(v => Number(v.countInStock) > 0) || availableVariants[0];
+      setSelectedVariant(best);
     }
-  }, [product, selectedPincode, availableVariants, selectedVariant]);
+  }, [availableVariants]);
 
   const handleAddToCart = () => {
     if (!isAuthenticated) {
@@ -168,7 +190,7 @@ const ProductPage = () => {
       return;
     }
     const pincodeRule = (selectedPincode && selectedVariant)
-      ? product?.pincodePricing?.find((entry) => entry.pincode === selectedPincode.trim() && entry.size === selectedVariant.size)
+      ? product?.pincodePricing?.find((entry) => entry.pincode === selectedPincode.trim() && normalizeSize(entry.size) === normalizeSize(selectedVariant.size))
       : null;
     const effectiveStock = pincodeRule ? Number(pincodeRule.inventory) : 0;
     const effectivePrice = pincodeRule ? Number(pincodeRule.price) : null;
@@ -229,16 +251,28 @@ const ProductPage = () => {
         alert("Please login to use wishlist.");
         return;
       }
-      if (isWishlisted) {
+      if (isWishlistLoading) return;
+      setIsWishlistLoading(true);
+
+      const previousWishlistState = isWishlisted;
+      setIsWishlisted(!previousWishlistState); // Optimistic Update
+
+      if (previousWishlistState) {
         await apiClient.delete(`/wishlist/${product._id}`);
       } else {
         await apiClient.post(`/wishlist/${product._id}`);
       }
       await fetchWishlist();
-      setHeartAnimation(true);
-      setTimeout(() => setHeartAnimation(false), 1000);
+
+      if (!previousWishlistState) { // Only animate when adding to wishlist
+        setHeartAnimation(true);
+        setTimeout(() => setHeartAnimation(false), 1000);
+      }
     } catch (err) {
       console.error(err);
+      setIsWishlisted(!isWishlisted); // Revert on failure
+    } finally {
+      setIsWishlistLoading(false);
     }
   };
 
@@ -273,12 +307,13 @@ const ProductPage = () => {
     ));
 
   const pincodeRule = (selectedPincode && selectedVariant)
-    ? product?.pincodePricing?.find((entry) => entry.pincode === selectedPincode.trim() && entry.size === selectedVariant.size)
+    ? product?.pincodePricing?.find((entry) => entry.pincode === selectedPincode.trim() && normalizeSize(entry.size) === normalizeSize(selectedVariant.size))
     : null;
 
   const effectivePrice = pincodeRule ? Number(pincodeRule.price) : null;
   const effectiveOriginalPrice = pincodeRule ? (pincodeRule.originalPrice || null) : null;
   const effectiveStock = pincodeRule ? Number(pincodeRule.inventory) : 0;
+  const isCheckingPincode = selectedPincode.length > 0 && selectedPincode.length < 6;
   const isUnavailableForPincode = selectedPincode.length === 6 && !pincodeRule;
   const availableLocations = [...new Set(
     (product?.pincodePricing || [])
@@ -344,13 +379,17 @@ const ProductPage = () => {
             )}
 
             {/* Out of Stock Overlay like Blinkit */}
-            {selectedVariant && (effectiveStock <= 0 || (selectedPincode.length === 6 && !pincodeRule)) && (
-              <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-20 flex items-center justify-center">
-                <div className="bg-red-600 text-white font-black px-6 py-2 rounded-lg shadow-xl transform -rotate-12 scale-110 border-2 border-white text-center">
-                  {selectedPincode.length === 6 && !pincodeRule ? 'NOT AVAILABLE AT PINCODE' : 'OUT OF STOCK'}
+            {selectedVariant && !isCheckingPincode && (
+              selectedPincode.length === 6
+                ? (!pincodeRule || effectiveStock <= 0)
+                : (selectedVariant.countInStock <= 0)
+            ) && (
+                <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-20 flex items-center justify-center">
+                  <div className="bg-red-600 text-white font-black px-6 py-2 rounded-lg shadow-xl transform -rotate-12 scale-110 border-2 border-white text-center">
+                    {selectedPincode.length === 6 && !pincodeRule ? 'NOT AVAILABLE AT PINCODE' : 'OUT OF STOCK'}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Desktop zoom toggle */}
             {!isVideo(product.images[activeImageIndex]) && !isMobile && (
@@ -558,14 +597,14 @@ const ProductPage = () => {
             <h4 className="font-semibold text-gray-800 mb-2 text-sm md:text-base">Select Pack Size:</h4>
             <div className="grid grid-cols-4 md:grid-cols-5 gap-2">
               {availableVariants.map((variant, index) => {
-                const isSelected = selectedVariant?.size === variant.size;
+                const isSelected = selectedVariant && normalizeSize(selectedVariant.size) === normalizeSize(variant.size);
                 const rule = selectedPincode.length === 6
-                  ? product.pincodePricing?.find(p => p.pincode === selectedPincode.trim() && p.size === variant.size)
+                  ? product.pincodePricing?.find(p => p.pincode === selectedPincode.trim() && normalizeSize(p.size) === normalizeSize(variant.size))
                   : null;
                 const stock = selectedPincode.length === 6
                   ? (rule ? Number(rule.inventory) : 0)
                   : Number(variant.countInStock);
-                const isOutOfStock = stock <= 0;
+                const isOutOfStock = stock <= 0 && !isCheckingPincode;
                 const isUnavailableHere = selectedPincode.length === 6 && !rule;
 
                 return (
@@ -575,6 +614,7 @@ const ProductPage = () => {
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
+                      userSelectedVariantRef.current = true;
                       setSelectedVariant(variant);
                     }}
                     className={`py-1 md:py-2 px-2 rounded-md font-medium text-[9px] md:text-xs transition-all duration-300 border shadow-sm relative z-30 flex flex-col items-center justify-center min-h-[45px]

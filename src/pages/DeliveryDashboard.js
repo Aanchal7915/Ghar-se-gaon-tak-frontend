@@ -34,7 +34,12 @@ const DeliveryDashboard = () => {
             ]);
 
             setAssignedDeliveries(assignedRes.data);
-            setDeliveredOrders(deliveredRes.data);
+            setDeliveredOrders(
+                deliveredRes.data.filter(d => {
+                    const orderNum = d.order?.orderNumber || '';
+                    return !orderNum.startsWith('REP-') && !orderNum.startsWith('RET-');
+                })
+            );
             setCancelledOrders(cancelledRes.data);
             setAssignedPickups(pickupsRes.data);
             setCompletedPickups(completedPickupsRes.data);

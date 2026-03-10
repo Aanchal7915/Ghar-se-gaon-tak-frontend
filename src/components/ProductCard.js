@@ -204,6 +204,8 @@ import { AiOutlineEye } from "react-icons/ai";
 const ProductCard = ({ product }) => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [heartAnimation, setHeartAnimation] = useState(false);
+  const [isWishlistLoading, setIsWishlistLoading] = useState(false);
+  const [localWishlistOverride, setLocalWishlistOverride] = useState(null); // overrides global isWishlisted optimistically
   const [isHovered, setIsHovered] = useState(false); // New state for hover
   const cardRef = useRef(null);
   const intervalRef = useRef(null);
@@ -245,11 +247,16 @@ const ProductCard = ({ product }) => {
     return product.pincodePricing.find(p => p.pincode === selectedPincode.trim());
   }, [product.pincodePricing, selectedPincode]);
 
-  const effectivePrice = localPriceData ? localPriceData.price : null;
-  const effectiveOriginalPrice = localPriceData ? localPriceData.originalPrice : null;
-  const effectiveStock = localPriceData ? localPriceData.inventory : 0;
+  const effectivePrice = localPriceData ? Number(localPriceData.price) : (defaultVariant ? Number(defaultVariant.price) : null);
+  const effectiveOriginalPrice = localPriceData ? Number(localPriceData.originalPrice) : (defaultVariant ? Number(defaultVariant.originalPrice) : null);
+  const effectiveStock = localPriceData ? Number(localPriceData.inventory) : (defaultVariant ? Number(defaultVariant.countInStock) : 0);
+  const globalStock = useMemo(() => {
+    const variantStock = (product.variants || []).reduce((acc, v) => acc + (v.countInStock || 0), 0);
+    const pincodeStock = (product.pincodePricing || []).reduce((acc, p) => acc + (p.inventory || 0), 0);
+    return Math.max(variantStock, pincodeStock);
+  }, [product.variants, product.pincodePricing]);
 
-  const isOutOfStock = effectiveStock <= 0;
+  const isOutOfStock = selectedPincode ? (effectiveStock <= 0) : (globalStock <= 0);
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -258,7 +265,7 @@ const ProductCard = ({ product }) => {
       return;
     }
     if (!defaultVariant) return;
-    addToCart({ ...product, selectedVariant: { ...defaultVariant, price: effectivePrice, inventory: effectiveStock } });
+    addToCart({ ...product, selectedVariant: { ...defaultVariant, price: effectivePrice, countInStock: effectiveStock, inventory: effectiveStock } });
   };
 
   const handleIncrement = (e) => {
@@ -290,7 +297,8 @@ const ProductCard = ({ product }) => {
     }
   };
 
-  const isWishlisted = user && wishlist.some((item) => item._id === product._id);
+  const globalIsWishlisted = user && wishlist.some((item) => item._id === product._id);
+  const isWishlisted = localWishlistOverride !== null ? localWishlistOverride : globalIsWishlisted;
 
   // Auto image cycle is now based on hover state
   useEffect(() => {
@@ -319,11 +327,17 @@ const ProductCard = ({ product }) => {
       alert("Please login to add to wishlist");
       return;
     }
+    if (isWishlistLoading) return;
+    setIsWishlistLoading(true);
+
+    const prevWishlistedState = isWishlisted;
+    setLocalWishlistOverride(!prevWishlistedState); // Optimistic Update
+
     try {
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
 
-      if (isWishlisted) {
+      if (prevWishlistedState) {
         await apiClient.delete(`/wishlist/${product._id}`, config);
       } else {
         await apiClient.post(`/wishlist/${product._id}`, {}, config);
@@ -332,9 +346,13 @@ const ProductCard = ({ product }) => {
       }
 
       await fetchWishlist();
+      setLocalWishlistOverride(null); // Clear override after successful sync
     } catch (err) {
       console.error("Wishlist error", err);
+      setLocalWishlistOverride(prevWishlistedState); // Revert on failure
       alert("Something went wrong with wishlist.");
+    } finally {
+      setIsWishlistLoading(false);
     }
   };
 

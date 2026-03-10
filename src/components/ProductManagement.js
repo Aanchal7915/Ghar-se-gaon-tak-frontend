@@ -39,9 +39,17 @@ const ProductManagement = () => {
   const [refreshCategories, setRefreshCategories] = useState(false);
   const [refreshProducts, setRefreshProducts] = useState(false);
 
+  const [selectedPincode, setSelectedPincode] = useState(() => localStorage.getItem("selectedPincode") || "");
+
   useEffect(() => {
     fetchProducts();
     fetchCategories();
+
+    const handlePincodeUpdate = () => {
+      setSelectedPincode(localStorage.getItem("selectedPincode") || "");
+    };
+    window.addEventListener("pincode-updated", handlePincodeUpdate);
+    return () => window.removeEventListener("pincode-updated", handlePincodeUpdate);
   }, [refreshCategories, refreshProducts]);
 
   const extractPincodes = (value = '') => value
@@ -180,7 +188,7 @@ const ProductManagement = () => {
     if (name === 'originalPrice') {
       if (!isNaN(original) && original > 0) {
         if (!isNaN(price)) {
-          newVariants[index].discount = (((original - price) / original) * 100).toFixed(2);
+          newVariants[index].discount = Math.max(0, (((original - price) / original) * 100)).toFixed(2);
         } else if (!isNaN(disc)) {
           newVariants[index].price = Math.round(original - (original * disc / 100));
         }
@@ -196,7 +204,7 @@ const ProductManagement = () => {
     } else if (name === 'price') {
       if (!isNaN(price)) {
         if (!isNaN(original) && original > 0) {
-          newVariants[index].discount = (((original - price) / original) * 100).toFixed(2);
+          newVariants[index].discount = Math.max(0, (((original - price) / original) * 100)).toFixed(2);
         } else if (!isNaN(disc) && disc < 100) {
           newVariants[index].originalPrice = Math.round(price / (1 - disc / 100));
         }
@@ -213,6 +221,8 @@ const ProductManagement = () => {
     setVariants(newVariants);
   };
 
+  const normalizeSize = (size) => size ? size.toLowerCase().replace(/\([^)]*\)/g, '').replace(/[^a-z0-9]/g, '').trim() : '';
+
   const handlePincodeRowChange = (index, e) => {
     const { name, value } = e.target;
     const updated = [...pincodePricingRows];
@@ -225,7 +235,7 @@ const ProductManagement = () => {
     if (name === 'originalPrice') {
       if (!isNaN(original) && original > 0) {
         if (!isNaN(price)) {
-          updated[index].discount = (((original - price) / original) * 100).toFixed(2);
+          updated[index].discount = Math.max(0, (((original - price) / original) * 100)).toFixed(2);
         } else if (!isNaN(disc)) {
           updated[index].price = Math.round(original - (original * disc / 100));
         }
@@ -241,7 +251,7 @@ const ProductManagement = () => {
     } else if (name === 'price') {
       if (!isNaN(price)) {
         if (!isNaN(original) && original > 0) {
-          updated[index].discount = (((original - price) / original) * 100).toFixed(2);
+          updated[index].discount = Math.max(0, (((original - price) / original) * 100)).toFixed(2);
         } else if (!isNaN(disc) && disc < 100) {
           updated[index].originalPrice = Math.round(price / (1 - disc / 100));
         }
@@ -289,7 +299,27 @@ const ProductManagement = () => {
     const token = localStorage.getItem('token');
     const data = new FormData();
     for (const key in formData) data.append(key, formData[key]);
-    data.append('variants', JSON.stringify(variants));
+
+    // Rebuild variants completely from pincodePricing unique sizes
+    const uniqueSizes = [...new Set(pricingPayload.map(p => p.size).filter(Boolean))];
+    const syncedVariants = uniqueSizes.map(size => {
+      const normalizedQuery = normalizeSize(size);
+      const matches = pricingPayload.filter(p => normalizeSize(p.size) === normalizedQuery);
+      const oldVariant = variants.find(v => normalizeSize(v.size) === normalizedQuery);
+
+      const totalInventory = matches.reduce((sum, p) => sum + (Number(p.inventory) || 0), 0);
+      const firstMatch = matches[0] || {};
+
+      return {
+        size: size,
+        price: Number(firstMatch.price) || 0,
+        originalPrice: Number(firstMatch.originalPrice) || 0,
+        discount: Number(firstMatch.discount) || 0,
+        countInStock: totalInventory > 0 ? totalInventory : (oldVariant ? (Number(oldVariant.countInStock) || 0) : 0),
+      };
+    });
+
+    data.append('variants', JSON.stringify(syncedVariants));
     data.append('pincodePricing', JSON.stringify(pricingPayload));
     for (const image of images) data.append('images', image);
     if (videoFile) data.append('video', videoFile);
@@ -368,7 +398,27 @@ const ProductManagement = () => {
     const token = localStorage.getItem('token');
     const data = new FormData();
     for (const key in formData) data.append(key, formData[key]);
-    data.append('variants', JSON.stringify(variants));
+
+    // Rebuild variants completely from pincodePricing unique sizes
+    const uniqueSizes = [...new Set(pricingPayload.map(p => p.size).filter(Boolean))];
+    const syncedVariants = uniqueSizes.map(size => {
+      const normalizedQuery = normalizeSize(size);
+      const matches = pricingPayload.filter(p => normalizeSize(p.size) === normalizedQuery);
+      const oldVariant = variants.find(v => normalizeSize(v.size) === normalizedQuery);
+
+      const totalInventory = matches.reduce((sum, p) => sum + (Number(p.inventory) || 0), 0);
+      const firstMatch = matches[0] || {};
+
+      return {
+        size: size,
+        price: Number(firstMatch.price) || 0,
+        originalPrice: Number(firstMatch.originalPrice) || 0,
+        discount: Number(firstMatch.discount) || 0,
+        countInStock: totalInventory > 0 ? totalInventory : (oldVariant ? (Number(oldVariant.countInStock) || 0) : 0),
+      };
+    });
+
+    data.append('variants', JSON.stringify(syncedVariants));
     data.append('pincodePricing', JSON.stringify(pricingPayload));
     for (const image of images) data.append('images', image);
     for (const imageUrl of existingImages) data.append('existingImages', imageUrl);
@@ -755,7 +805,7 @@ const ProductManagement = () => {
               <div className="flex items-start space-x-4">
                 <div className="relative min-w-[80px] h-[80px]">
                   <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover rounded-2xl shadow-sm border border-white" />
-                  {product.variants.every(v => v.countInStock <= 0) && (
+                  {product.variants.every(v => v.countInStock <= 0) && (product.pincodePricing || []).every(p => p.inventory <= 0) && (
                     <span className="absolute -top-2 -right-2 bg-red-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full shadow-lg">OUT</span>
                   )}
                 </div>
@@ -767,18 +817,43 @@ const ProductManagement = () => {
                   <p className="text-[10px] font-bold text-blue-600 mt-0.5">{product.category?.name || 'Uncategorized'}</p>
 
                   <div className="mt-3 flex flex-wrap gap-1.5">
-                    {product.variants.map((v, i) => (
-                      <span key={i} className={`text-[9px] px-2 py-0.5 rounded-md font-bold ${v.countInStock <= 0 ? 'bg-red-50 text-red-500 line-through' : 'bg-green-50 text-green-700'}`}>
-                        {v.size}: ₹{v.price} ({v.countInStock <= 0 ? '0' : v.countInStock})
-                      </span>
-                    ))}
+                    {product.variants.map((v, i) => {
+                      const normalizedVSize = normalizeSize(v.size);
+                      // Prioritize selected pincode match
+                      let pincodeData = (product.pincodePricing || [])
+                        .find(p => p.pincode === selectedPincode && normalizeSize(p.size) === normalizedVSize);
+
+                      // Fallback to any pincode match for this size
+                      if (!pincodeData) {
+                        pincodeData = (product.pincodePricing || [])
+                          .find(p => normalizeSize(p.size) === normalizedVSize);
+                      }
+
+                      const pincodeStock = (product.pincodePricing || [])
+                        .filter(p => normalizeSize(p.size) === normalizedVSize)
+                        .reduce((acc, p) => acc + (p.inventory || 0), 0);
+
+                      const displayPrice = pincodeData?.price || v.price;
+                      const totalVStock = (v.countInStock || 0) > 0 ? v.countInStock : pincodeStock;
+
+                      return (
+                        <span key={i} className={`text-[9px] px-2 py-0.5 rounded-md font-bold ${totalVStock <= 0 ? 'bg-red-50 text-red-500 line-through' : 'bg-green-50 text-green-700'}`}>
+                          {v.size}: ₹{displayPrice} ({totalVStock <= 0 ? '0' : totalVStock})
+                        </span>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
 
               <div className="mt-4 pt-4 border-t border-dashed flex items-center justify-between">
                 <div className="text-[9px] text-gray-400 font-bold uppercase tracking-widest leading-none">
-                  Total Units: <span className="text-gray-900 ml-1">{product.variants.reduce((acc, v) => acc + (v.countInStock || 0), 0)}</span>
+                  Total Units: <span className="text-gray-900 ml-1">
+                    {Math.max(
+                      product.variants.reduce((acc, v) => acc + (v.countInStock || 0), 0),
+                      (product.pincodePricing || []).reduce((acc, p) => acc + (p.inventory || 0), 0)
+                    )}
+                  </span>
                 </div>
                 <div className="flex space-x-2">
                   <button
