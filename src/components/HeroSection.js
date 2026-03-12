@@ -38,7 +38,7 @@ const HeroSection = () => {
         setLoading(true);
         const response = await apiClient.get('/categories');
         // Show 5 categories on the home page for a clean single row design
-        setCategories(response.data.slice(0, 5));
+        setCategories(response.data);
       } catch (error) {
         console.error('Failed to fetch categories:', error);
       } finally {

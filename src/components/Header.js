@@ -504,7 +504,7 @@ const Header = () => {
                 <div className="mt-8">
                   <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2 mb-4">Shop By Category</h4>
                   <ul className="space-y-1">
-                    {categories.slice(0, 8).map((cat) => (
+                    {categories.map((cat) => (
                       <li key={cat._id}>
                         <Link
                           to={`/categories/${cat._id}`}
