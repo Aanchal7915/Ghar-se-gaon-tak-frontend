@@ -50,6 +50,8 @@ const LoginRegisterPage = () => {
   // 🔹 Request OTP
   const handleRequestOtp = async (e) => {
     e.preventDefault();
+    setSignupMessage("");
+    setSignupError(false);
     setIsSignupSubmitting(true);
     try {
       await apiClient.post("/auth/request-otp", {
@@ -61,6 +63,10 @@ const LoginRegisterPage = () => {
     } catch (err) {
       setSignupMessage(err.response?.data?.message || "Failed to send OTP.");
       setSignupError(true);
+      setTimeout(() => {
+        setSignupMessage("");
+        setSignupError(false);
+      }, 3000);
     } finally {
       setIsSignupSubmitting(false);
     }
@@ -69,6 +75,8 @@ const LoginRegisterPage = () => {
   // 🔹 Handle Signup
   const handleSignup = async (e) => {
     e.preventDefault();
+    setSignupMessage("");
+    setSignupError(false);
     setIsSignupSubmitting(true);
     try {
       await apiClient.post("/auth/verify-otp", {
@@ -86,6 +94,10 @@ const LoginRegisterPage = () => {
     } catch (err) {
       setSignupMessage(err.response?.data?.message || "Signup failed.");
       setSignupError(true);
+      setTimeout(() => {
+        setSignupMessage("");
+        setSignupError(false);
+      }, 3000);
     } finally {
       setIsSignupSubmitting(false);
     }
@@ -103,7 +115,7 @@ const LoginRegisterPage = () => {
           {/* ✨ FIX: Added the .animation wrapper div */}
           <div className="animation">
             <h2>Login</h2>
-            <form onSubmit={handleLogin}>
+            <form onSubmit={(e) => e.preventDefault()}>
               {loginError && <p className="error-text">{loginError}</p>}
               <div className="input-box">
                 <input
@@ -124,7 +136,7 @@ const LoginRegisterPage = () => {
                 <label>Password</label>
               </div>
               <div className="input-box">
-                <button type="submit" className="btn" disabled={isLoginSubmitting}>
+                <button type="button" onClick={handleLogin} className="btn" disabled={isLoginSubmitting}>
                   Login
                 </button>
               </div>

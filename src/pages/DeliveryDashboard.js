@@ -20,10 +20,12 @@ const DeliveryDashboard = () => {
     const [currentDelivery, setCurrentDelivery] = useState(null);
     const [activeTab, setActiveTab] = useState('assigned');
     const [filterMonth, setFilterMonth] = useState('');
-    const [filterYear, setFilterYear] = useState('');
+    const [filterYear, setFilterYear] = useState("");
+    const [notification, setNotification] = useState(null);
+    const prevAssignedIdsRef = React.useRef(null);
 
-    const fetchAllData = async () => {
-        setLoading(true);
+    const fetchAllData = async (silent = false) => {
+        if (!silent) setLoading(true);
         try {
             const [assignedRes, deliveredRes, cancelledRes, pickupsRes, completedPickupsRes] = await Promise.all([
                 apiClient.get('/delivery/my-deliveries'),
@@ -33,7 +35,32 @@ const DeliveryDashboard = () => {
                 apiClient.get(`/return-replace/my-pickups/completed?month=${filterMonth}&year=${filterYear}`),
             ]);
 
-            setAssignedDeliveries(assignedRes.data);
+            const assignedData = assignedRes.data;
+            
+            const notifyNewest = (data) => {
+                if (data.length > 0) {
+                    const newest = [...data].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))[0];
+                    if (newest) {
+                        const productNames = newest.order?.orderItems?.map(item => item.name).join(', ') || 'No products';
+                        setNotification(`New Delivery Assigned: Order ID: ${newest.order?.orderNumber || 'N/A'} - ${productNames}`);
+                        setTimeout(() => setNotification(null), 8000);
+                    }
+                }
+            };
+
+            if (prevAssignedIdsRef.current === null) {
+                // First load/login: notify only newest assigned delivery
+                notifyNewest(assignedData);
+            } else {
+                // Subsequent polls: notify only newest added delivery
+                const prevIds = prevAssignedIdsRef.current;
+                const newAssignments = assignedData.filter(d => !prevIds.includes(d._id));
+                notifyNewest(newAssignments);
+            }
+            
+            prevAssignedIdsRef.current = assignedData.map(d => d._id);
+            setAssignedDeliveries(assignedData);
+
             setDeliveredOrders(
                 deliveredRes.data.filter(d => {
                     const orderNum = d.order?.orderNumber || '';
@@ -47,14 +74,17 @@ const DeliveryDashboard = () => {
             setError('Failed to fetch data.');
             console.error(err.response?.data?.message || err.message);
         } finally {
-            setLoading(false);
+            if (!silent) setLoading(false);
         }
     };
 
-
-    useEffect(() => {
-        fetchAllData();
-    }, [filterMonth, filterYear]);
+useEffect(() => {
+    fetchAllData();
+    const intervalId = setInterval(() => {
+        fetchAllData(true);
+    }, 15000);
+    return () => clearInterval(intervalId);
+}, [filterMonth, filterYear]);
 
     const handleUpdateStatus = async (delivery, status) => {
         if (!delivery || !delivery.order || !delivery.order._id) {
@@ -134,7 +164,22 @@ const DeliveryDashboard = () => {
     if (error) return <div className="text-center text-red-500 mt-10">{error}</div>;
 
     return (
-        <div className="p-3 md:p-6 lg:p-8 bg-gray-50 min-h-screen">
+        <div className="p-3 md:p-6 lg:p-8 bg-gray-50 min-h-screen relative">
+            {/* Notification Popup */}
+            {notification && (
+                <div className="fixed top-5 left-1/2 transform -translate-x-1/2 z-[100] flex items-center bg-blue-600 border-l-4 border-blue-800 py-3 px-6 shadow-xl rounded animate-bounce">
+                    <div className="text-white flex items-center gap-3">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <p className="font-bold">{notification}</p>
+                    </div>
+                    <button onClick={() => setNotification(null)} className="ml-4 text-white hover:text-gray-200" title="Close">
+                        &times;
+                    </button>
+                </div>
+            )}
+
             <h1 className="text-lg md:text-2xl lg:text-3xl font-bold mb-6 text-gray-800">Delivery Dashboard</h1>
 
             <div className="border-b border-gray-200 mb-6 overflow-x-auto scrollbar-hide">

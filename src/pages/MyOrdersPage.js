@@ -641,7 +641,12 @@ const MyOrdersPage = () => {
                                                         className="w-20 h-20 object-cover rounded-lg shadow-sm"
                                                     />
                                                     <div className="flex-1">
-                                                        <p className="font-semibold text-gray-800">{item.name}</p>
+                                                        <p className="font-semibold text-gray-800">
+                                                            {item.name}
+                                                            {item.product?.isActive === false && (
+                                                                <span className="text-red-500 text-xs ml-2 font-bold">(Deactivated)</span>
+                                                            )}
+                                                        </p>
                                                         <p className="text-sm text-gray-500">Qty: {item.qty} | Pack: {item.size}</p>
                                                         <p className="text-lg font-bold text-indigo-500">₹{item.price}</p>
                                                     </div>

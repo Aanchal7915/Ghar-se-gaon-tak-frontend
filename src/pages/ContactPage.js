@@ -178,7 +178,7 @@ const ContactPage = () => {
               <FaClock className="text-indigo-600 text-xl mt-1" />
               <div>
                 <h3 className="text-lg font-semibold text-gray-700">Hours</h3>
-                <p className="text-gray-600">Closes 9 pm</p>
+                <p className="text-gray-600">12:00 PM - 6:00 PM</p>
               </div>
             </div>
 

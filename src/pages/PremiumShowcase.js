@@ -327,7 +327,7 @@ const vi2 = "/assets/vi2.mp4";
 const sections = [
   {
     id: "b1",
-    img: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80",
+    img: "/assets/organic_farm_harvest.png",
     title: "Organic Farm Harvest",
     text: "Experience the bounty of nature with our hand-picked organic vegetables. Sourced daily from local sustainable farms, bringing the crispest flavors directly to your kitchen.",
   },
@@ -429,7 +429,7 @@ const PremiumShowcase = () => {
             transition={{ duration: 1.2, ease: "easeOut" }}
           >
             <motion.img
-              src={`${section.img}&q=90&w=800`}
+              src={section.img.startsWith('http') ? `${section.img}&q=90&w=800` : section.img}
               alt={section.title}
               className="w-full h-auto max-h-[500px] object-cover rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-700 md:hover:scale-105"
               whileHover={{ scale: 1.05, rotate: -2 }}

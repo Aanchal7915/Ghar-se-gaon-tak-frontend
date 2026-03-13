@@ -43,6 +43,7 @@ const productSchema = new mongoose.Schema({
   isComingSoon: { type: Boolean, default: false }, // NEW FIELD for upcoming section
   isFeatured: { type: Boolean, default: false },
   isBestseller: { type: Boolean, default: false },
+  isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 
 // Auto-increment productId

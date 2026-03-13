@@ -27,6 +27,7 @@ exports.getProducts = async (req, res) => {
   try {
     const { pincode } = req.query;
     const filter = pincode ? { 'pincodePricing.pincode': pincode } : {};
+    filter.isActive = { $ne: false };
     const products = await Product.find(filter).populate('category');
     res.json(products);
   } catch (error) {
@@ -56,8 +57,9 @@ exports.deleteProduct = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
-    await Product.deleteOne({ _id: product._id });
-    res.json({ message: 'Product removed' });
+    product.isActive = false;
+    await product.save();
+    res.json({ message: 'Product marked as deactivated' });
   } catch (error) {
     console.error('Backend Error during product deletion:', error);
     res.status(500).json({ message: 'Server Error' });
@@ -210,7 +212,7 @@ exports.updateProduct = async (req, res) => {
 exports.getProductsByCategory = async (req, res) => {
   try {
     const { pincode } = req.query;
-    const filter = { category: req.params.categoryId };
+    const filter = { category: req.params.categoryId, isActive: { $ne: false } };
     if (pincode) filter['pincodePricing.pincode'] = pincode;
 
     const products = await Product.find(filter);
@@ -224,7 +226,7 @@ exports.getProductsBySubCategory = async (req, res) => {
   const { subCategory } = req.params;
   const { pincode } = req.query;
 
-  const filter = { subCategory };
+  const filter = { subCategory, isActive: { $ne: false } };
   if (pincode) filter['pincodePricing.pincode'] = pincode;
 
   const products = await Product.find(filter)
@@ -242,7 +244,7 @@ exports.getProductsBySubCategory = async (req, res) => {
 exports.getProductsByGender = async (req, res) => {
   try {
     const { pincode } = req.query;
-    const filter = { gender: req.params.gender };
+    const filter = { gender: req.params.gender, isActive: { $ne: false } };
     if (pincode) filter['pincodePricing.pincode'] = pincode;
 
     const products = await Product.find(filter);
@@ -255,7 +257,7 @@ exports.getProductsByGender = async (req, res) => {
 exports.getFeaturedProducts = async (req, res) => {
   try {
     const { pincode } = req.query;
-    const filter = { isFeatured: true };
+    const filter = { isFeatured: true, isActive: { $ne: false } };
     if (pincode) filter['pincodePricing.pincode'] = pincode;
 
     const products = await Product.find(filter).populate('category', 'name');
@@ -268,7 +270,7 @@ exports.getFeaturedProducts = async (req, res) => {
 exports.getBestsellerProducts = async (req, res) => {
   try {
     const { pincode } = req.query;
-    const filter = { isBestseller: true };
+    const filter = { isBestseller: true, isActive: { $ne: false } };
     if (pincode) filter['pincodePricing.pincode'] = pincode;
 
     const products = await Product.find(filter).populate('category', 'name');
@@ -281,7 +283,7 @@ exports.getBestsellerProducts = async (req, res) => {
 exports.getUpcomingProducts = async (req, res) => {
   try {
     const { pincode } = req.query;
-    const filter = { isComingSoon: true };
+    const filter = { isComingSoon: true, isActive: { $ne: false } };
     if (pincode) filter['pincodePricing.pincode'] = pincode;
 
     const products = await Product.find(filter).populate('category', 'name');
@@ -295,7 +297,7 @@ exports.getRecentProducts = async (req, res) => {
   const limit = parseInt(req.query.limit, 10) || 20;
   const { pincode } = req.query;
 
-  const filter = { isComingSoon: { $ne: true } };
+  const filter = { isComingSoon: { $ne: true }, isActive: { $ne: false } };
   if (pincode) filter['pincodePricing.pincode'] = pincode;
 
   const products = await Product.find(filter)
@@ -321,7 +323,8 @@ exports.searchProducts = async (req, res) => {
         { brand: { $regex: regex } },
         { subCategory: { $regex: regex } },
         { gender: { $regex: regex } }
-      ]
+      ],
+      isActive: { $ne: false }
     };
 
     let finalFilter = searchFilter;

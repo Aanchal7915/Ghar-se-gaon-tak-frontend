@@ -27,10 +27,16 @@ const generateRefreshToken = (user) => {
 
 exports.requestOTP = async (req, res) => {
   const { email } = req.body;
-  const otp = Math.floor(100000 + Math.random() * 900000);
-  otpStore[email] = otp;
 
   try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Already registered user, please login' });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    otpStore[email] = otp;
+
     await otpService.sendOTP(email, otp);
     res.status(200).json({ message: 'OTP sent successfully' });
   } catch (error) {
@@ -53,7 +59,7 @@ exports.signup = async (req, res) => {
   try {
     let user = await User.findOne({ email });
     if (user) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: 'Already registered user, please login' });
     }
 
     const userRole = role || 'customer';
